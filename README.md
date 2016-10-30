@@ -16,8 +16,16 @@ Location information is either gathered by the device, or is added manual for st
 If I am to use MQTT, we need to use X.509 certificates. The device gateway requires use of TLS 1.2.
 - IoT rule actions are used to invoke Lambda or DynamoDB. Uses DeviceId and timestamp as keys for the table.
 
-## Implementation
-(Based on [1]
+?[2] http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html
+AWS::IAM::User is used to create a new user.
+
+[3] https://serverless.zone/an-abstracted-serverless-microservices-architecture-33706fabc516#.v4emm2npr
+Abstracted serverless microservice architecture. Serverless service is deployed using CloudFormation and creates APIs have a unique endpoint.
+
+
+
+## Implementation plan
+(Based on [1])
 
 StaticThing:
   Type: AWS::IoT::Thing
@@ -63,3 +71,15 @@ SensorPolicyPrincipalAttachmentCert:
   Type: AWS::IoT::PolicyPrincipalAttachment
   Properties:
     ... etc
+
+
+(based on [3])
+serverless.yml
+functions:
+  getThing:
+    name:getThing
+    handler: things.get
+    event:
+      - http:
+        path: things
+        method: get
