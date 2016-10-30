@@ -22,6 +22,11 @@ AWS::IAM::User is used to create a new user.
 [3] https://serverless.zone/an-abstracted-serverless-microservices-architecture-33706fabc516#.v4emm2npr
 Abstracted serverless microservice architecture. Serverless service is deployed using CloudFormation and creates APIs have a unique endpoint.
 
+[4] http://docs.aws.amazon.com/iot/latest/developerguide/iot-rule-actions.html
+AWS IoT Result Actions - what to do when an IoT rule is triggered
+
+[5] http://docs.aws.amazon.com/cloudsearch/latest/developerguide/searching-locations.html
+Searching and Ranking Results by Geographic Location in Amazon CloudSearch
 
 
 ## Implementation plan
