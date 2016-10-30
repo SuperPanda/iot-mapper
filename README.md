@@ -8,3 +8,58 @@ Location information is either gathered by the device, or is added manual for st
 ## Other
 - When configuring an IoT sensor device, get an LED to light up on the device when it is selected
 - Setup CloudFormation
+- setup app to enrich sensor information
+- map to view all things on map
+
+## Reference
+[1] https://serverless.zone/iot-with-the-serverless-framework-e228fae87be
+If I am to use MQTT, we need to use X.509 certificates. The device gateway requires use of TLS 1.2.
+- IoT rule actions are used to invoke Lambda or DynamoDB. Uses DeviceId and timestamp as keys for the table.
+
+## Implementation
+(Based on [1]
+
+StaticThing:
+  Type: AWS::IoT::Thing
+  Properties:
+    AttributePayload:
+      Attributes:
+        SensorType: someAttribute
+        LocationSrc: manual
+ 
+DynamicThing:
+  Type: AWS::IoT::Thing
+  Properties:
+    AttributePayload:
+      Attributes:
+        LocationSrc: auto
+
+StaticThingPolicy:
+  Properties:
+    PolicyDocument:
+      Version: "2016-10-31"
+      Statement
+       - Effect: Allow
+       Action: ["iot:Connect"]
+       Resource: ["${{custom.staticThingClientResource}}"]
+       - Effect: "Allow"
+       Action: ["iot:Publish"]
+       Resource: ["${{custom.staticThingMeasurementTopicResource}}"]
+
+
+DynamicThingPolicy:
+  Properties:
+    PolicyDocument:
+      Version: "2016-10-31"
+      Statement
+       - Effect: Allow
+       Action: ["iot:Connect"]
+       Resource: ["${{custom.dynamicThingClientResource}}"]
+       - Effect: "Allow"
+       Action: ["iot:Publish"]
+       Resource: ["${{custom.dynamicThingLocationTopicResource}}"]
+
+SensorPolicyPrincipalAttachmentCert:
+  Type: AWS::IoT::PolicyPrincipalAttachment
+  Properties:
+    ... etc
