@@ -1,0 +1,114 @@
+# Adapted from:
+# https://gist.github.com/johncmckim/5d149fb2416f38957c2d0e30f56c6aba/raw/84b9c1f93340878b3ae821144eb561050a882d6a/garden-aid-iot-hub-serverless-iot.yml 
+TestThing:
+  Type: AWS::IoT::Thing
+  Properties:
+    AttributePayload:
+      Attributes:
+       SensorType: world-coordinates
+TestThingPolicy:
+  Properties:
+    PolicyDocument:
+     Version: "2016-10-31"
+     Statement:
+       - Effect: Allow
+         Action: ["iot:Connect"]
+         Resource ["${{custom.testThingClientResource}}"]
+       - Effect: "Allow"
+         Action: ["iot:Publish"]
+
+# What is a policy principal attachment?
+TestPolicyPrincipalAttachmentCert:
+  Type: AWS::IoT::PolicyPrincipalAttachment
+  Properties:
+    PolicyName: { Ref: TestThingPolicy }
+    Principal: ${{custom.iotCertificateArn}}
+
+TestThingPrincipalAttachmentCert:
+  Type: "AWS::IoT::ThingPrincipalAttachment"
+  Properties:
+    ThingName: { Ref: TestThing }
+    Principal: ${{custom.iotCertificateArn}}
+
+#
+# <http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html>
+# Roles and policies
+# STS allows trusted devices, IAM users or applications to obtain a
+# temporary security token. There is a mechanism to allow
+# third party access via an externalId attribute
+
+IoTRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2016-10-31"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - iot.amazonaws.com
+          Action:
+            - sts:AssumeRole
+
+IoTRolePolicies:
+  Type: AWS::IAM::Policy
+  Properties:
+    PolicyName: IoTRole_Policy
+    PolicyDocument:
+      Version: "2016-10-31"
+      Statement:
+        - 
+          Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: "*"
+        - 
+           Effect: Allow
+           Action:
+             - lambda:InvokeFunction
+           Resource: "*"
+    Roles: [{ Ref: IoTRole }]
+
+#StaticThing:
+#  Type: AWS::IoT::Thing
+#  Properties:
+#    AttributePayload:
+#      Attributes:
+#       SensorType: someAttribute
+#       LocationSrc: manual
+
+#DynamicThing:
+#  Type: AWS::IoT::Thing
+#  Properties:
+#    AttributePayload:
+#     Attributes:
+#       LocationSrc: auto
+
+#StaticThingPolicy:
+#  Properties:
+#    PolicyDocument:
+#     Version: "2016-10-31"
+#     Statement:
+#       - Effect: Allow
+#         Action: ["iot:Connect"]
+#         Resource ["${{custom.staticThingClientResource}}"]
+#       - Effect: "Allow"
+#         Action: ["iot:Publish"]
+
+#DynamicThingPolicy:
+#  Properties:
+#    PolicyDocument:
+#     Version: "2016-10-31"
+#     Statement:
+#       - Effect: Allow
+#         Action: ["iot:Connect"]
+#         Resource ["${{custom.staticThingClientResource}}"]
+#       - Effect: "Allow"
+#         Action: ["iot:Publish"]
+
+#StaticPolicyPrincipalAttachmentCert:
+#  Type: AWS::IoT::PolicyPrincipalAttachment
+#  Properties:
+#    PolicyName: { Ref: StaticThingPolicy }
+#    Principal: ${{custom.iotCertificateArn}}
+    

@@ -1,0 +1,5 @@
+https://dotnetcodr.com/2015/04/11/using-amazon-dynamodb-for-ip-and-co-ordinate-based-geo-location-services-part-1-introduction-and-goals/
+Store pair of longitude and latitude coordinates as: lng and lat.
+
+http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-account.html
+AWS Cloud Formation Template reference

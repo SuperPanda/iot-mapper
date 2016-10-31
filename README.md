@@ -1,9 +1,19 @@
 # iot-mapper
 Location information is either gathered by the device, or is added manual for static sensors without GPS (via a phone app). Data is maintained over time of the value of the sensors over time, for static sensors; or location history with moving devices. All information is made available on a map.
+```
+IoT ---> Lambda
+            |---> DynamoDB
+            |---> [later to be used to trigger updates]
+```
 
-## Step 1. Setup two things
-- static sensor thing
-- thing being tracked
+serverless create --template aws-nodejs
+
+## Step 1. Setup -two- one thing
+- [x] static sensor thing
+- [x] thing being tracked
+- Setup on test item that reports its geo location (or can choose)
+
+#
 
 ## Other
 - When configuring an IoT sensor device, get an LED to light up on the device when it is selected

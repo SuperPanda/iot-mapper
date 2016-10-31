@@ -1,0 +1,145 @@
+# Adapted from https://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.92dlyi8gk
+service: iot-mapper
+provider:
+  name: aws
+  runtime: nodejs6.3
+  # Need to change the variable syntax to prevent this configuration file
+  # conflicting with CloudFormation
+  # variableSyntax: '\${{([\s\S]+?)}}'
+  # get runtime variables from a file
+custom: ${{file(./vars-${{opt:stage}}.yml)}}
+
+# define the get readings function 
+# and define the get location function
+functions:
+  checkSensorReading:
+    handler: index.checkSensorReading
+  getLocation:
+    handler: index.getLocation
+
+resources:
+  Resources:
+    # other resources that need declaration: DynamoDB, IoT
+    # IOT
+    # DynamoDB
+    TestThing:
+      Type: AWS::IoT::Thing
+      Properties:
+        AttributePayload:
+          Attributes:
+           SensorType: world-coordinates
+    TestThingPolicy:
+      Type: AWS::IoT:Policy
+      Properties:
+        PolicyDocument:
+         Version: "2016-10-31"
+         Statement:
+           - Effect: Allow
+             Action: ["iot:Connect"]
+             Resource: ["${{custom.testThingClientResource}}"]
+           - Effect: "Allow"
+             Action: ["iot:Publish"]
+    
+    # Attaches a policy to a certificate
+    TestPolicyPrincipalAttachmentCert:
+      Type: AWS::IoT::PolicyPrincipalAttachment
+      Properties:
+        PolicyName: { Ref: TestThingPolicy }
+        Principal: ${{custom.iotCertificateArn}}
+    
+    # Attach a certificate to a thing
+    TestThingPrincipalAttachmentCert:
+      Type: "AWS::IoT::ThingPrincipalAttachment"
+      Properties:
+        ThingName: { Ref: TestThing }
+        Principal: ${{custom.iotCertificateArn}}
+    
+    #
+    # <http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html>
+    # Roles and policies
+    # STS allows trusted devices, IAM users or applications to obtain a
+    # temporary security token. There is a mechanism to allow
+    # third party access via an externalId attribute
+    
+    IoTRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2016-10-31"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - iot.amazonaws.com
+              Action:
+                - sts:AssumeRole
+    
+    # Restricts what is allowed to be done by the IoT role (to putting items in dynamoDB and invoking lambda functions
+    IoTRolePolicies:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: IoTRole_Policy
+        PolicyDocument:
+          Version: "2016-10-31"
+          Statement:
+            - 
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: "*"
+            - 
+               Effect: Allow
+               Action:
+                 - lambda:InvokeFunction
+               Resource: "*"
+        Roles: [{ Ref: IoTRole }]
+    
+    # AWS IoT SQL REFERENCE https://docs.aws.amazon.com/iot/latest/developerguide/iot-sql-functions.html
+    # Derived from: <https://gist.github.com/johncmckim/5d149fb2416f38957c2d0e30f56c6aba>
+    # TestThingRule:
+    #  Type: AWS::IoT::TopicRule
+    #  Properties:
+    #   TopicRulePayload:
+    #     RuleDisabled: false
+    #     #Sql: "SELECT value FROM '${{opt:stage}}/test/sensor/world-coordinates'"
+    #   Actions:
+    #     -  
+    #       DynamoDB: { Ref:
+    
+        
+    # http://docs.aws.amazon.com/iot/latest/developerguide/dynamodb-v2-rule.html
+    # The rest of the data should be stores as columns in Dynamo DB,
+    # based on the attributes of the MQTT payload
+    # Apparently to do this a role must grant
+    # dynamodb:PutItem permission
+    WorldLocationData:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: world-location-data-${{opt:stage}}
+        AttributeDefinitions:
+          - AttributeName: DeviceId
+            AttributeType: S
+          - AttributeName: Timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: DeviceId
+            KeyType: HASH
+          - AttributeName: Timestamp
+            KeyType: RANGE
+        # Should figure out the best values [TODO]
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1   
+    #LambdaInvokePermission:
+    #  Type: AWS::Lambda::Permission
+    #  Properties:
+    #    FunctionName: { Fn::GetAtt: [ checkSensorReading, Arn ] }
+    #    Action: lambda:InvokeFunction
+    #    Principal: iot.amazonaws.com
+    LambdaInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: { Fn::GetAtt: [ getLocation, Arn ] }
+        Action: lambda:InvokeFunction
+        Principal: iot.amazonaws.com

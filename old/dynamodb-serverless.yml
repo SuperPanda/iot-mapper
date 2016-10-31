@@ -1,0 +1,28 @@
+# Code adapted from:
+# https://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.gjsvksw0g#
+
+# http://docs.aws.amazon.com/iot/latest/developerguide/dynamodb-v2-rule.html
+# The rest of the data should be stores as columns in Dynamo DB,
+# based on the attributes of the MQTT payload
+# Apparently to do this a role must grant
+# dynamodb:PutItem permission
+WorldLocationData:
+  Type: AWS::DynamoDB::Table
+  DeletionPolicy: Retain
+  Properties:
+    TableName: world-location-data-${{opt:stage}}
+    AttributeDefinitions:
+      - AttributeName: DeviceId
+        AttributeType: S
+      - AttributeName: Timestamp
+        AttributeType: S
+    KeySchema:
+      - AttributeName: DeviceId
+        KeyType: HASH
+      - AttributeName: Timestamp
+        KeyType: RANGE
+ 
+  # Should figure out the best values [TODO]
+  ProvisionedThroughput:
+    ReadCapacityUnits: 1
+    WriteCapacityUnits: 1

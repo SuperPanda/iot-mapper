@@ -1,0 +1,13 @@
+# IoT resource
+
+service: iot-mapper
+provider:
+  name: aws
+  runtime: nodejs6.3
+
+functions:
+  hello:
+    handler: helloFunc
+
+
+  

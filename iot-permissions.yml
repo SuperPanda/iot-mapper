@@ -1,0 +1,30 @@
+# IoT resource
+Resources:
+  # IoT Thing
+  # More info: 
+  TestThing:
+    Type: AWS::IoT::Thing
+          
+  #http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-policy.html
+  # IoT policy on what things are allowed to do
+  TestThingPolicy:
+    Type: "AWS::IoT::Policy"
+    Properties:
+      PolicyName:
+        Ref: "TestThingPolicy"
+      PolicyDocument:
+        Version: "2016-10-31"
+        Statement:
+          - 
+            Effect: "Allow"
+            Action:
+              - "iot:Connect"
+            Resource:
+              - "*"
+  Parameters:
+    NameParameter:
+      Type: "String"
+  # IoT IAM role (who)
+  #https://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.gjsvksw0g 
+  IoTRole:
+  # 
