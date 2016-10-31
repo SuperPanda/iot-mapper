@@ -36,7 +36,8 @@ app.controller("TestCtrl",["$scope","DeviceData","$interval",function ($scope,De
             $scope.deviceAttrs[i] = {deviceId: d.deviceId, lat: move(d.lat), lng: move(d.lng)};
           }
         };
-        //$interval(randomMove,500,10000);
+        // Service to turn on and off events, all sorts of magic
+       // $interval(randomMove,500,10000);
         // Need to add remove
         // Need to add update
         
