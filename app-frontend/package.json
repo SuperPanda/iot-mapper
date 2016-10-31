@@ -1,0 +1,26 @@
+{
+  "name": "aws-iot-tracking-map",
+  "version": "1.0.0",
+  "description": "A real time map of the location and values of tracked objects.",
+  "main": "index.html",
+  "dependencies": {
+    "bower": "^1.7.9",
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "jasmine": "^2.5.2",
+    "jshint": "^2.9.4",
+    "karma": "^1.3.0",
+    "karma-jasmine": "^1.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/SuperPanda/iot-mapper"
+  },
+  "author": "Andrew Briscoe",
+  "license": "MIT"
+}
