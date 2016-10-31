@@ -4,7 +4,7 @@ Resources:
   # More info: 
   TestThing:
     Type: AWS::IoT::Thing
-          
+         
   #http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-policy.html
   # IoT policy on what things are allowed to do
   TestThingPolicy:
@@ -25,6 +25,67 @@ Resources:
     NameParameter:
       Type: "String"
   # IoT IAM role (who)
-  #https://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.gjsvksw0g 
+  # Adapted from:
+  # https://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.gjsvksw0g 
   IoTRole:
-  # 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2016-10-31"
+        Statement:
+          - 
+            Effect: Allow
+            Principal:
+              Service:
+                - iot.amazonaws.com
+              Action:
+                - sts:AssumeRole
+
+  #IAM Policy for the IoTRole (Stage 2)
+  #(Allow access IoT access to DynamoDB and Lambda)
+  #IoTRolePolicies:
+  # Type: AWS::IAM::Policy
+  # Properties:
+  #   PolicyName: IoTRole_Policy
+  #   PolicyDocument:
+  #     Version: "2016-10-31"
+  #     Statement:
+  #       - 
+  #         Effect: Allow
+  #         Action:
+  #           - dynamodb:PutItem
+  #         Resource: "*"
+  #       -
+  #         Effect: Allow
+  #         Action:
+  #           - lambda:InvokeFunction
+  #         Resource: "*"
+  #     Roles: [{ Ref: IoTRole }]
+  #
+  # AWS IoT Topic Rule - sends message from IoT to Lambda and DynamoDB
+  # Does this apply to web sockets?
+  # Adapted from:
+  #  - http://serverless.zone/iot-with-the-serverless-framework-e228fae87be#.pteliefvm   
+  # AWS IoT SQL documentation:
+  #  - http://docs.aws.amazon.com/iot/latest/developerguide/iot-sql-functions.html
+  #TestThingRule:
+  #  Type: AWS::IoT::TopicRule
+  #  Properties:
+  #    TopicRulePayload:
+  #      RuleDisabled: false
+  #      Sql: "SELECT lat, lng FROM '${{opt:stage}}/devices/sensor/location'"
+  #      Actions:
+  #        - 
+  #          DynamoDB:
+  #            TableName: { Ref: LocationData }
+  #            HashKeyField: "ClientId"
+  #            HashKeyValue: "${clientId()}"
+  #            RangeKeyField: "Timestamp"
+  #            RangeKeyValue: "${timestamp()}"
+  #            PayloadField: "Data"
+  #            RoleArn: { Fn::GetAtt: [IoTRole, Arn] }
+  #         - 
+  #           Lambda:
+  #             # What does Fn:GetAtt do?
+  #             FunctionArn: { Fn:GetAtt: [ getPosition, Arn ] }
+
