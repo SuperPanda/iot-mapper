@@ -1,1 +1,8 @@
-*.swp
+**/*.swp
+**/*.min.js
+*.DS_Store
+.sass-ache
+**/node_modules/
+dist/
+src/components/
+**/*.log
