@@ -1,0 +1,22 @@
+{
+  "name": "aws-iot-tracking-map",
+  "description": "A real time map of the location and values of tracked objects.",
+  "main": "index.html",
+  "authors": [
+    "Andrew Briscoe"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/SuperPanda/iot-mapper",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "angularjs#^1.5.8",
+    "ngmap": "^1.17.8"
+  }
+}
