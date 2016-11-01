@@ -6,8 +6,12 @@ the development tools.
 NodeJS download https://nodejs.org/en/download/.
 ...This project currently uses... bower, grunt, karma, karma-jasmine, karma-phantonjs-launcher
 ...
+Use 'npm install' in shell to install all the packages used
+in this project.
 ### How to install bower packages
 Bower is used to store JavaScript based packages.
+Simple use 'bower install <package>'
+... We currently use ngmap and AngularJS
 - The configuration is stored ______
 
 
