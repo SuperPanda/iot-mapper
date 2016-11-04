@@ -1,121 +1,5 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Metadata": {
-    "AWS::CloudFormation::Designer": {
-      "bb219fb0-7b86-42d0-b482-56f19b9fadcd": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -240,
-          "y": 130
-        },
-        "z": 0,
-        "embeds": [],
-        "isrelatedto": [
-          "bb219fb0-7b86-42d0-b482-56f19b9fadcd"
-        ]
-      },
-      "8b6b63eb-674b-4f97-9a35-a75871842ccd": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -230,
-          "y": 40
-        },
-        "z": 0,
-        "embeds": []
-      },
-      "6d0b64dc-dc9c-4754-861a-fab58c0234be": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -70,
-          "y": 40
-        },
-        "z": 0,
-        "embeds": [],
-        "isrelatedto": [
-          "a24727c5-8cdb-4f0d-a950-20205311d489",
-          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
-        ]
-      },
-      "a24727c5-8cdb-4f0d-a950-20205311d489": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 110,
-          "y": 40
-        },
-        "z": 0,
-        "embeds": []
-      },
-      "cbf9e53a-56d1-4faa-b106-308848580494": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -350,
-          "y": 130
-        },
-        "z": 0,
-        "embeds": []
-      },
-      "c8d14b9b-28c8-4922-b314-abb444e48274": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -350,
-          "y": 40
-        },
-        "z": 0,
-        "embeds": [],
-        "isassociatedwith": [
-          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
-        ],
-        "isrelatedto": [
-          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
-        ]
-      },
-      "923058c1-9894-4a5b-b8b7-0a4a6d2b510c": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 70,
-          "y": -40
-        },
-        "z": 0,
-        "embeds": []
-      },
-      "96d399e4-b226-4194-85fd-49adfdb37b6f": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -70,
-          "y": -40
-        },
-        "z": 0,
-        "embeds": [],
-        "isrelatedto": [
-          "923058c1-9894-4a5b-b8b7-0a4a6d2b510c"
-        ]
-      }
-    }
-  },
   "Resources": {
     "IoTRole": {
       "Type": "AWS::IAM::Role",
@@ -258,6 +142,13 @@
                 "dynamodb:PutItem"
               ],
               "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction"
+              ],
+              "Resource": "*"
             }
           ]
         },
@@ -270,15 +161,6 @@
       "Metadata": {
         "AWS::CloudFormation::Designer": {
           "id": "c8d14b9b-28c8-4922-b314-abb444e48274"
-        }
-      }
-    },
-    "RegisterDeviceFunction": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {},
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "923058c1-9894-4a5b-b8b7-0a4a6d2b510c"
         }
       }
     },
@@ -295,10 +177,13 @@
           "Sql": "SELECT * FROM '$aws/events/certificates/registered/a6775d12c9237c78d6efcd278fa700f75dfdcb3da8f17ad1b4f90476a949fb32'",
           "Actions": [
             {
-              "Lambda": {
-                "FunctionArn": {
+              "DynamoDB": {
+                "TableName": {
+                  "Ref": "IotCatalog"
+                },
+                "RoleArn": {
                   "Fn::GetAtt": [
-                    "RegisterDeviceFunction",
+                    "IoTRole",
                     "Arn"
                   ]
                 }
@@ -307,6 +192,190 @@
           ]
         }
       }
+    },
+    "IotCatalog": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "iot-catalog",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "serialNumber",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "device",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "endpoint",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "type",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "certificateId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "activationCode",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "activated",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "email",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "serialNumber",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "device",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5208808b-09c8-4e4a-8126-e375f3b3402d"
+        }
+      }
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "96d399e4-b226-4194-85fd-49adfdb37b6f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 90,
+          "y": 310
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "923058c1-9894-4a5b-b8b7-0a4a6d2b510c",
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd",
+          "5208808b-09c8-4e4a-8126-e375f3b3402d"
+        ]
+      },
+      "cbf9e53a-56d1-4faa-b106-308848580494": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 320,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "a24727c5-8cdb-4f0d-a950-20205311d489": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "bb219fb0-7b86-42d0-b482-56f19b9fadcd": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 390,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "bb219fb0-7b86-42d0-b482-56f19b9fadcd"
+        ]
+      },
+      "8b6b63eb-674b-4f97-9a35-a75871842ccd": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 420
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "c8d14b9b-28c8-4922-b314-abb444e48274": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 300,
+          "y": 420
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ],
+        "isrelatedto": [
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ]
+      },
+      "6d0b64dc-dc9c-4754-861a-fab58c0234be": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 310
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "a24727c5-8cdb-4f0d-a950-20205311d489",
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ]
+      },
+      "5208808b-09c8-4e4a-8126-e375f3b3402d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 90,
+          "y": 210
+        },
+        "z": 0,
+        "embeds": []
+      }
+    }
+  },
+  "Parameters": {
+    "S3BucketParameter": {
+      "Type": "String",
+      "Default": "s3.amazon.com/iot-map/",
+      "Description": "Location of the web files and lambda functions"
     }
   }
 }

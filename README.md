@@ -1,3 +1,9 @@
+# How to use
+0. setup AWS account, create IAM account, copy tokens
+aws cloudformation validate-template --template-body file://infrastructure.template
+0. install cloud formation file
+1. follow instructions on how to generate CA certificate
+2. generate device certificates with generated CA certificate (devices will be auto-enrolled)
 # iot-mapper
 Location information is either gathered by the device, or is added manual for static sensors without GPS (via a phone app). Data is maintained over time of the value of the sensors over time, for static sensors; or location history with moving devices. All information is made available on a map.
 ```
