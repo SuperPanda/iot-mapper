@@ -6,3 +6,6 @@
 **/*.key
 **/*.srl
 **/*.csr
+**/*.crt
+device-simulator/device*/**
+app-frontend/index.html
