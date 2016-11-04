@@ -181,6 +181,10 @@
                 "TableName": {
                   "Ref": "IotCatalog"
                 },
+                "HashKeyField": "clientId",
+                "HashKeyValue": "${clientId()}",
+                "RangeKeyField": "timestamp",
+                "RangeKeyValue": "${timestamp()}",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "IoTRole",
@@ -199,46 +203,22 @@
         "TableName": "iot-catalog",
         "AttributeDefinitions": [
           {
-            "AttributeName": "serialNumber",
+            "AttributeName": "clientId",
             "AttributeType": "S"
           },
           {
-            "AttributeName": "device",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "endpoint",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "type",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "certificateId",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "activationCode",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "activated",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "email",
+            "AttributeName": "timestamp",
             "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "serialNumber",
+            "AttributeName": "clientId",
             "KeyType": "HASH"
           },
           {
-            "AttributeName": "device",
-            "KeyType": "HASH"
+            "AttributeName": "timestamp",
+            "KeyType": "RANGE"
           }
         ],
         "ProvisionedThroughput": {
