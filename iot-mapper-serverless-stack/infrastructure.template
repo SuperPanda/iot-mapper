@@ -231,6 +231,15 @@
           "id": "5208808b-09c8-4e4a-8126-e375f3b3402d"
         }
       }
+    },
+    "WebAppBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {},
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        }
+      }
     }
   },
   "Metadata": {
@@ -348,6 +357,18 @@
         },
         "z": 0,
         "embeds": []
+      },
+      "0d961511-36a3-45f7-8808-67fa25b61e7a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -20,
+          "y": 400
+        },
+        "z": 0,
+        "embeds": []
       }
     }
   },
@@ -356,6 +377,34 @@
       "Type": "String",
       "Default": "s3.amazon.com/iot-map/",
       "Description": "Location of the web files and lambda functions"
+    }
+  },
+  "Outputs": {
+    "WebsiteURL": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WebAppBucket",
+          "WebsiteURL"
+        ]
+      },
+      "Description": "URL for website hosted on S3"
+    },
+    "S3BucketSecureURL": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "WebAppBucket",
+                "DomainName"
+              ]
+            }
+          ]
+        ]
+      },
+      "Description": "Name of S3 bucket to hold website content"
     }
   }
 }

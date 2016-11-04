@@ -41,3 +41,6 @@ describe(" A suite", function() {
 ### Acknowledgements
 ng-map
 the stack overflow post used for borders
+
+This command uploads to the bucket, just replace iot-tracker-dev-webapp... with the S3 bucket listed in cloud formation
+aws s3 cp index.html s3://iot-tracker-dev-webappbucket-1gtr61eylutls && aws s3 cp bower_components s3://iot-tracker-dev-webappbucket-1gtr61eylutls --recursive && aws s3 cp js s3://iot-tracker-dev-webappbucket-1gtr61eylutls --recursive
