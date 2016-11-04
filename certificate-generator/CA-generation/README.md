@@ -23,3 +23,32 @@ Step 2.
 
 https://aws.amazon.com/blogs/aws/new-just-in-time-certificate-registration-for-aws-iot/
 Apparently, now I just create a device certificate and sign it with CA and it will automatically be registered.
+
+"When AWS IoT auto-registers a certificate or when a certificate in PENDING_ACTIVATION status connects, it publishes a message to the following MQTT topic"
+- "$aws/events/certificates/registered/<caCertificateID>"
+- Payload:
+```
+{
+  "certificateId": "<certificateID>",
+  "caCertificateId": "<caCertificateId>",
+  "timestamp": "<timestamp>",
+  "certificateStatus": "PENDING_ACTIVATION",
+  "awsAccountId": "<awsAccountId>",
+  "certificateRegistrationTimestamp": "<certificateRegistrationTimestamp>"
+}
+```
+
+"For example, an AWS IoT rule in your account can listen on the $aws/events/certificates/registered/+ topic to build an Amazon DynamoDB table of all the registered certificates."
+
+"The general recommendation is to attach an AWS IoT rules engine action to the registration topic that will perform the bootstrapping or provisioning steps (like consulting your CRLs) and then activate/deactivate/revoke the certificate, create and attach the policies to the certificate, and so on."
+
+-- 
+MAKE A DEVICE WITH A CERTIFICATE SIGNED BY A C.A.
+
+
+WHEN THE $aws/events/certificates/registered/+ topic is received,
+call a lambda function to "aws iot create-thing --thing-name "ThingName"..
+// $ aws iot create-thing --thing-name "MyLightBulb" --attribute-payload "{\"attributes\": {\"wattage\":\"75\", \"model\":\"123\"}}
+
+
+

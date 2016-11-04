@@ -234,10 +234,52 @@
     },
     "WebAppBucket": {
       "Type": "AWS::S3::Bucket",
-      "Properties": {},
+      "Properties": {
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html",
+          "ErrorDocument": "error.html"
+        }
+      },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
           "id": "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        }
+      }
+    },
+    "WebAppBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "WebAppBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "WebAppBucket"
+                    },
+                    "/*"
+                  ]
+                ]
+              },
+              "Principal": "*"
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "aaa78b42-bf1d-4084-9c42-a5d483df1f2f"
         }
       }
     }
@@ -369,6 +411,30 @@
         },
         "z": 0,
         "embeds": []
+      },
+      "aaa78b42-bf1d-4084-9c42-a5d483df1f2f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -20,
+          "y": 290
+        },
+        "z": 0,
+        "embeds": [],
+        "isassociatedwith": [
+          "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        ]
+      },
+      "fad2041f-d3fc-41ae-8147-6f775b10ede4": {
+        "source": {
+          "id": "aaa78b42-bf1d-4084-9c42-a5d483df1f2f"
+        },
+        "target": {
+          "id": "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        },
+        "z": 2
       }
     }
   },

@@ -1,5 +1,7 @@
 # IoT Tracking Map
 ## Setup
+### Get GoogleMaps API key (use until changed)
+
 ### NodeJS Package Manager (NPM)
 NodeJS Package Manager needs to be installed to use
 the development tools.
