@@ -1,5 +1,5 @@
 // See: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-lambda-function-code.html
-// Code from: https://github.com/awslabs/aws-iot-examples/blob/master/justInTimeRegistration/deviceActivation.js
+// Code from:	 https://github.com/awslabs/aws-iot-examples/blob/master/justInTimeRegistration/deviceActivation.js
 var AWS = require('aws-sdk');
 
 exports.handler = function(event, context, callback) {
@@ -19,7 +19,7 @@ exports.handler = function(event, context, callback) {
     var policyName = `Thing_Policy`;
     
     //Policy that allows connect, publish, subscribe and receive
-    var policy = {
+    /*var policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -45,12 +45,12 @@ exports.handler = function(event, context, callback) {
                 "Resource": `arn:aws:iot:${region}:${accountId}:topicfilter/${topicName}/#`
             }
         ]
-    };
+    };*/
 
     /*
     Step 1) Create a policy
     */
-    iot.createPolicy({
+    /*iot.createPolicy({
         policyDocument: JSON.stringify(policy),
         policyName: policyName
     }, (err, data) => {
@@ -61,7 +61,7 @@ exports.handler = function(event, context, callback) {
             return;
         }
         console.log(data);
-        
+      */  
         /*
         Step 2) Attach the policy to the certificate
         */
@@ -94,6 +94,6 @@ exports.handler = function(event, context, callback) {
                 }
             });
         });
-    });
+    /*});*/
  
 }
