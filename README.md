@@ -1,3 +1,15 @@
+See the wiki for details: https://github.com/SuperPanda/iot-mapper/wiki
+This page should include: how to deploy and links to the wiki for tasks such as build on the code (required tools, how to write tests, how to modify assets)
+
+Layout:
+Main Page - description of project, use cases (e.g. JITR registration using x509 and TLSv1.2 + MQTT), acknowledgements, overview of steps and pretty picture, link to wiki
+Wiki
+- Tutorials
+- Detailed explanation
+- Detailed + alternative installation guide
+- How to contribute
+- Side bar links to individual READMEs through the project
+
 # How to use
 0. setup AWS account, create IAM account, copy tokens
 aws cloudformation validate-template --template-body file://infrastructure.template
@@ -16,9 +28,10 @@ aws cloudformation validate-template --template-body file://infrastructure.templ
 # iot-mapper
 Location information is either gathered by the device, or is added manual for static sensors without GPS (via a phone app). Data is maintained over time of the value of the sensors over time, for static sensors; or location history with moving devices. All information is made available on a map.
 ```
-IoT ---> Lambda
-            |---> DynamoDB
-            |---> [later to be used to trigger updates]
+IoT ---> Lambda -----> Bootstrap
+    ---> DynamoDB
+            |---> [later to be used to trigger updates]?
+            |--->
 ```
 
 serverless create --template aws-nodejs
