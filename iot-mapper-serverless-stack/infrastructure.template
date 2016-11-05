@@ -181,10 +181,10 @@
                 "TableName": {
                   "Ref": "IotCatalog"
                 },
-                "HashKeyField": "clientId",
-                "HashKeyValue": "${clientId()}",
-                "RangeKeyField": "timestamp",
-                "RangeKeyValue": "${timestamp()}",
+                "HashKeyField": "CertificateId",
+                "HashKeyValue": "certificateId",
+                "RangeKeyField": "Timestamp",
+                "RangeKeyValue": "timestamp",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "IoTRole",
@@ -203,21 +203,21 @@
         "TableName": "iot-catalog",
         "AttributeDefinitions": [
           {
-            "AttributeName": "clientId",
+            "AttributeName": "CertificateId",
             "AttributeType": "S"
           },
           {
-            "AttributeName": "timestamp",
+            "AttributeName": "Timestamp",
             "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "clientId",
+            "AttributeName": "CertificateId",
             "KeyType": "HASH"
           },
           {
-            "AttributeName": "timestamp",
+            "AttributeName": "Timestamp",
             "KeyType": "RANGE"
           }
         ],
@@ -439,10 +439,10 @@
     }
   },
   "Parameters": {
-    "S3BucketParameter": {
+    "CACertificateId": {
       "Type": "String",
-      "Default": "s3.amazon.com/iot-map/",
-      "Description": "Location of the web files and lambda functions"
+      "Default": "a6775d12c9237c78d6efcd278fa700f75dfdcb3da8f17ad1b4f90476a949fb32",
+      "Description": "The CA Certificate id used to register devices"
     }
   },
   "Outputs": {
