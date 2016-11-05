@@ -182,9 +182,9 @@
                   "Ref": "IotCatalog"
                 },
                 "HashKeyField": "CertificateId",
-                "HashKeyValue": "certificateId",
+                "HashKeyValue": "${certificateId}",
                 "RangeKeyField": "Timestamp",
-                "RangeKeyValue": "timestamp",
+                "RangeKeyValue": "${timestamp}",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "IoTRole",
