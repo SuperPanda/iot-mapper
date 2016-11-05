@@ -40,7 +40,7 @@ serverless create --template aws-nodejs
 [1] https://serverless.zone/iot-with-the-serverless-framework-e228fae87be
 If I am to use MQTT, we need to use X.509 certificates. The device gateway requires use of TLS 1.2.
 - IoT rule actions are used to invoke Lambda or DynamoDB. Uses DeviceId and timestamp as keys for the table.
-
+- Did not end up using serverless
 ?[2] http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-user.html
 AWS::IAM::User is used to create a new user.
 
@@ -53,6 +53,11 @@ AWS IoT Result Actions - what to do when an IoT rule is triggered
 [5] http://docs.aws.amazon.com/cloudsearch/latest/developerguide/searching-locations.html
 Searching and Ranking Results by Geographic Location in Amazon CloudSearch
 
+## BIGGEST HELP
+https://aws.amazon.com/blogs/iot/just-in-time-registration-of-device-certificates-on-aws-iot/
+
+## Code snippets used from:
+https://gist.github.com/johncmckim/5d149fb2416f38957c2d0e30f56c6aba
 
 ## Implementation plan
 (Based on [1])
