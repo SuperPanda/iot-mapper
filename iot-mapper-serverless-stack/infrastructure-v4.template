@@ -660,7 +660,7 @@
   "Parameters": {
     "LambdaFunctionsBucket": {
       "Type": "String",
-      "Default": "iot-map-lambda-functions",
+      "Default": "iot-map-lambda-funcs",
       "Description": "The bucket where the lambda functions are stored"
     }
   }
