@@ -10,6 +10,9 @@ Wiki
 - How to contribute
 - Side bar links to individual READMEs through the project
 
+# FUNCTIONAL AND NON-FUNCTIONAL REQUIREMENTS
+TODO: ADD FUNCTIONAL AND NON-FUNCTIONAL REQUIREMENTS - 30% of grade
+
 # How to use
 0. setup AWS account, create IAM account, copy tokens
 aws cloudformation validate-template --template-body file://infrastructure.template
@@ -49,7 +52,7 @@ serverless create --template aws-nodejs
 - setup app to enrich sensor information
 - map to view all things on map
 
-## Reference
+## Resources (move to wiki and review how much was used)
 [1] https://serverless.zone/iot-with-the-serverless-framework-e228fae87be
 If I am to use MQTT, we need to use X.509 certificates. The device gateway requires use of TLS 1.2.
 - IoT rule actions are used to invoke Lambda or DynamoDB. Uses DeviceId and timestamp as keys for the table.
