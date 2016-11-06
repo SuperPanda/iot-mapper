@@ -55,7 +55,7 @@ exports.handler	 = function(event, context, callback) {
         // Activate the certificate. 
         // Optionally, have Certificate Revocation List (CRL) check logic here and ACTIVATE the certificate only if it is not in the CRL.
         // Revoke the certificate if it is in the CRL
-            
+        
         iot.updateCertificate({
             certificateId: certificateId,
             newStatus: 'ACTIVE'
@@ -71,17 +71,40 @@ exports.handler	 = function(event, context, callback) {
                     "TableName": "iot-catalog",
                     "Item" : db_item
 				}, (err, data) => {
-                  if (err) {
-                    console.log("Error in putItem"+err);
-                    //context.fail("Error in putItem "+err);
+                    if (err) {
+                        console.log("Error in putItem"+err);
+                        callback(err, data);
+                      } else {
+                      console.log("Item successully inserted")
+                      //context.succeed("Successfully Inserted");
+                    }
+                    // Documentation available from: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Iot.html
+				    // Do I have permissions for iot:attachThingPrincipal, iot:createThing
+                    // iot.createThing (thingName, AttributePayload)  => iot.attachThingPrincipal(principal:certificateARN,thingName)
+                    thingName = "MyThing-" + certificateId.slice(0,16)
+                    iot.createThing({
+	  			    "thingName": thingName
+                    }, (err, data) => {
+		  		    if (err){
+			  		    console.log("Error creating thing, error: " + err)
+                        callback(err, data);
                     } else {
-                    console.log("Item successully inserted")
-                    //context.succeed("Successfully Inserted");
-                  }
-                  callback(null, "Success, created, attached policy and activated the certificate " + certificateId);
+	   				    iot.attachThingPrincipal({
+                           "principal": certificateARN,
+					       "thingName": thingName
+			  	        }, (err, data) => {
+					        if (err){
+						        console.log("Could not attach certificate to thing: "+err)
+						        callback(err, data);
+						    } else {
+						         console.log("Certificate successfully attached")
+						    }
+					    });
+				    }
+				});
+            callback(null, "Success, created, attached policy and activated the certificate " + certificateId);
                 });
             }
-				// Need to add to IoT Catalog the registration
         });
     }); 
 }
