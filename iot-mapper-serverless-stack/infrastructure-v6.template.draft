@@ -1,0 +1,675 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "IoTRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "iot.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        }
+      }
+    },
+    "TestThingPolicy": {
+      "Type": "AWS::IoT::Policy",
+      "Properties": {
+        "PolicyName": "Thing_Policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iot:Connect"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "bb219fb0-7b86-42d0-b482-56f19b9fadcd"
+        }
+      }
+    },
+    "LocationData": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "location-data",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "DeviceId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Timestamp",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "DeviceId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "Timestamp",
+            "KeyType": "RANGE"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "a24727c5-8cdb-4f0d-a950-20205311d489"
+        }
+      }
+    },
+    "TestThingRule": {
+      "Type": "AWS::IoT::TopicRule",
+      "Properties": {
+        "TopicRulePayload": {
+          "RuleDisabled": false,
+          "Sql": "SELECT clientId() As DeviceId, timestamp() As Timestamp, lat AS Lat, lng AS Lng FROM '/devices/sensor/location'",
+          "Actions": [
+            {
+              "DynamoDB": {
+                "TableName": {
+                  "Ref": "LocationData"
+                },
+                "HashKeyField": "DeviceId",
+                "HashKeyValue": "${clientId()}",
+                "RangeKeyField": "Timestamp",
+                "RangeKeyValue": "${timestamp()}",
+                "PayloadField": "Data",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "IoTRole",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "6d0b64dc-dc9c-4754-861a-fab58c0234be"
+        }
+      }
+    },
+    "TestThing": {
+      "Type": "AWS::IoT::Thing",
+      "Properties": {},
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "cbf9e53a-56d1-4faa-b106-308848580494"
+        }
+      }
+    },
+    "IoTRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "IoTRole_Policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:PutItem"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "IoTRole"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "c8d14b9b-28c8-4922-b314-abb444e48274"
+        }
+      }
+    },
+    "RegisterDeviceRule": {
+      "Type": "AWS::IoT::TopicRule",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "96d399e4-b226-4194-85fd-49adfdb37b6f"
+        }
+      },
+      "Properties": {
+        "TopicRulePayload": {
+          "RuleDisabled": false,
+          "Sql": "SELECT * FROM '$aws/events/certificates/registered/a6775d12c9237c78d6efcd278fa700f75dfdcb3da8f17ad1b4f90476a949fb32'",
+          "Actions": [
+            {
+              "DynamoDB": {
+                "TableName": {
+                  "Ref": "IotCatalog"
+                },
+                "HashKeyField": "CertificateId",
+                "HashKeyValue": "${certificateId}",
+                "RangeKeyField": "Timestamp",
+                "RangeKeyValue": "${timestamp}",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "IoTRole",
+                    "Arn"
+                  ]
+                }
+              }
+            },
+            {
+              "Lambda": {
+                "FunctionArn": {
+                  "Fn::GetAtt": [
+                    "RegisterDeviceFunction",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "IotCatalog": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "iot-catalog",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "CertificateId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Timestamp",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "CertificateId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "Timestamp",
+            "KeyType": "RANGE"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5208808b-09c8-4e4a-8126-e375f3b3402d"
+        }
+      }
+    },
+    "WebAppBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html",
+          "ErrorDocument": "error.html"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        }
+      }
+    },
+    "WebAppBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "WebAppBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "WebAppBucket"
+                    },
+                    "/*"
+                  ]
+                ]
+              },
+              "Principal": "*"
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "aaa78b42-bf1d-4084-9c42-a5d483df1f2f"
+        }
+      }
+    },
+    "RegistrationPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "Registration_Policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:*:*:*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iot:UpdateCertificate",
+                "iot:CreatePolicy",
+                "iot:AttachPrincipalPolicy",
+                "iot:CreateThing"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:PutItem"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "DeviceRegistrar"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "c91fa3af-794c-475b-a2f6-ec5c271ef86b"
+        }
+      }
+    },
+    "DeviceRegistrar": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "e76ff3dc-eff5-46c2-b99c-755b833de257"
+        }
+      }
+    },
+    "RegisterDeviceFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Role": {
+          "Fn::GetAtt": [
+            "DeviceRegistrar",
+            "Arn"
+          ]
+        },
+        "Handler": "index.handler",
+        "Runtime": "nodejs4.3",
+        "Code": {
+          "S3Bucket": {
+            "Ref": "LambdaFunctionsBucket"
+          },
+          "S3Key": "registerdevicefunction.zip"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5390d4c4-86e6-402a-b992-a521cce31fb7"
+        }
+      }
+    },
+    "LambdaPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "RegisterDeviceFunction"
+        },
+        "Principal": "iot.amazonaws.com",
+        "SourceAccount": {
+          "Ref": "AWS::AccountId"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "f79cbd01-a1ed-4f78-9ccd-8cd282980fff"
+        }
+      }
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "96d399e4-b226-4194-85fd-49adfdb37b6f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 100,
+          "y": 360
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "923058c1-9894-4a5b-b8b7-0a4a6d2b510c",
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd",
+          "5208808b-09c8-4e4a-8126-e375f3b3402d",
+          "5390d4c4-86e6-402a-b992-a521cce31fb7"
+        ]
+      },
+      "cbf9e53a-56d1-4faa-b106-308848580494": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -50,
+          "y": 200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "a24727c5-8cdb-4f0d-a950-20205311d489": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "bb219fb0-7b86-42d0-b482-56f19b9fadcd": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -210,
+          "y": 200
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "bb219fb0-7b86-42d0-b482-56f19b9fadcd"
+        ]
+      },
+      "8b6b63eb-674b-4f97-9a35-a75871842ccd": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 420
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "c8d14b9b-28c8-4922-b314-abb444e48274": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 300,
+          "y": 420
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ],
+        "isrelatedto": [
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ]
+      },
+      "6d0b64dc-dc9c-4754-861a-fab58c0234be": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 310
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "a24727c5-8cdb-4f0d-a950-20205311d489",
+          "8b6b63eb-674b-4f97-9a35-a75871842ccd"
+        ]
+      },
+      "5208808b-09c8-4e4a-8126-e375f3b3402d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 90,
+          "y": 210
+        },
+        "z": 0,
+        "embeds": []
+      },
+      "0d961511-36a3-45f7-8808-67fa25b61e7a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -140,
+          "y": 440
+        },
+        "z": 0,
+        "embeds": []
+      },
+      "aaa78b42-bf1d-4084-9c42-a5d483df1f2f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -30,
+          "y": 440
+        },
+        "z": 0,
+        "embeds": [],
+        "isassociatedwith": [
+          "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        ]
+      },
+      "fad2041f-d3fc-41ae-8147-6f775b10ede4": {
+        "source": {
+          "id": "aaa78b42-bf1d-4084-9c42-a5d483df1f2f"
+        },
+        "target": {
+          "id": "0d961511-36a3-45f7-8808-67fa25b61e7a"
+        },
+        "z": 2
+      },
+      "5390d4c4-86e6-402a-b992-a521cce31fb7": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -40,
+          "y": 320
+        },
+        "z": 0,
+        "embeds": [],
+        "isrelatedto": [
+          "e76ff3dc-eff5-46c2-b99c-755b833de257"
+        ]
+      },
+      "e76ff3dc-eff5-46c2-b99c-755b833de257": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -160,
+          "y": 300
+        },
+        "z": 0,
+        "embeds": []
+      },
+      "c91fa3af-794c-475b-a2f6-ec5c271ef86b": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -260,
+          "y": 300
+        },
+        "z": 0,
+        "embeds": [],
+        "isassociatedwith": [
+          "e76ff3dc-eff5-46c2-b99c-755b833de257"
+        ],
+        "isrelatedto": [
+          "e76ff3dc-eff5-46c2-b99c-755b833de257"
+        ]
+      },
+      "461f4b1a-f518-489e-b692-8aa047cb831a": {
+        "source": {
+          "id": "e76ff3dc-eff5-46c2-b99c-755b833de257"
+        },
+        "target": {
+          "id": "c91fa3af-794c-475b-a2f6-ec5c271ef86b"
+        },
+        "z": 11
+      },
+      "f79cbd01-a1ed-4f78-9ccd-8cd282980fff": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": -240,
+          "y": 390
+        },
+        "z": 0,
+        "embeds": [],
+        "isassociatedwith": [
+          "5390d4c4-86e6-402a-b992-a521cce31fb7"
+        ],
+        "isrelatedto": [
+          "96d399e4-b226-4194-85fd-49adfdb37b6f"
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "WebsiteURL": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WebAppBucket",
+          "WebsiteURL"
+        ]
+      },
+      "Description": "URL for website hosted on S3"
+    },
+    "S3BucketSecureURL": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "WebAppBucket",
+                "DomainName"
+              ]
+            }
+          ]
+        ]
+      },
+      "Description": "Name of S3 bucket to hold website content"
+    }
+  },
+  "Parameters": {
+    "LambdaFunctionsBucket": {
+      "Type": "String",
+      "Default": "iot-map-lambda-funcs",
+      "Description": "The bucket where the lambda functions are stored"
+    }
+  }
+}
