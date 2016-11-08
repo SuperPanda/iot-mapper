@@ -4,13 +4,15 @@
 certificateId=`aws iot list-certificates | jq  -r '.certificates[0].certificateId'`
 certificateARN=`aws iot list-certificates | jq -r '.certificates[0].certificateArn'`
 
-policyName="Thing_Policy"
+policyName="Trusted_Thing_Policy"
 
 thingNamePrefix="MyThing"
 thingNameSuffix=${certificateId:0:16}
 thingName="${thingNamePrefix}-${thingNameSuffix}"
 
-if [[ "$certificateId" -eq "null" ]]; then
+if [ "$certificateId" == "null" ]; then
+  echo "No certificate found, exiting"
+  echo "Expected 'null' got '$certificateId'"
   exit 100
 fi
 

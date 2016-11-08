@@ -387,7 +387,8 @@
               "Effect": "Allow",
               "Action": [
                 "iot:Connect",
-                "iot:Publish"
+                "iot:Publish",
+                "iot:Subscribe"
               ],
               "Resource": [
                 "*"

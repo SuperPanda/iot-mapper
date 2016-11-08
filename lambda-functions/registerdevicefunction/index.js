@@ -4,6 +4,8 @@ var AWS = require('aws-sdk');
 var doc = require('dynamodb-doc');
 var dynamo = new doc.DynamoDB();
 
+var policyName = `Trusted_Thing_Policy`;
+
 exports.handler	 = function(event, context, callback) {
     //Replace it with the AWS region the lambda will be running in
     var region = "us-east-1";
@@ -14,14 +16,13 @@ exports.handler	 = function(event, context, callback) {
      //Replace it with your desired topic prefix
     var topicName = `foo/bar/${certificateId}`;
     var certificateARN = `arn:aws:iot:${region}:${accountId}:cert/${certificateId}`;
-    var policyName = `Thing_Policy`;
     console.log(event);
 	var now = Number(Date.now());
 	// http://stackoverflow.com/questions/32451380/aws-dynamodb-returns-validation-error-when-called-from-aws-lambda
 	// According to a post of stack overflow, the format has changed
 	var db_item = {
 	  "awsAccountId": accountId,
-      "certificateId": certificateId,
+    "certificateId": certificateId,
 	  "caCertificateId": event.caCertificateId.toString().trim(),
 	  "certificateRegistrationTimestamp": event.certificateRegistrationTimestamp.toString().trim(),
 	  "certificateStatus": event.certificateStatus.toString().trim(),

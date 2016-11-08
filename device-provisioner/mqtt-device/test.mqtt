@@ -4,8 +4,8 @@
     "Lng": 2.0
    },
   "Payload": {
-    "Status": "INACTIVE",
-    "Temperature": 1,
+    "Status": "ROAM_AND_SENSE",
+    "Temperature": 31,
     "Humidity": 0.56
   },
   "_Metadata": {
@@ -14,7 +14,7 @@
       "Description": "The state of the device",
       "DataType": "Enum",
       "Timestamp": 100
-    }
+    },
     "Temperature": {
       "Label": "Temperature in Celsius (C)",
       "Description": "The internal operating temperature",
@@ -29,7 +29,7 @@
     },
     "_Enum": {
       "Status": [
-        "ACTIVE", "INACTIVE"
+        "ROAM_ONLY", "SENSE_ONLY", "ROAM_AND_SENSE", "IDLE"
       ]
     }
   }
