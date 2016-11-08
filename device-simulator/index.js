@@ -145,6 +145,7 @@ var timeout = setInterval(function(){
   humidity = message.Payload.Humidity;
 
   if (mode == "SENSE_ONLY" || mode == "ROAM_AND_SENSE"){
+    mapBox.addMarker({"lon":""+y,"lat":""+x,"color":"yellow"});
     temp = message.Payload.Temperature = inRange(move(temp,0.3),-25,65);
     humidity = message.Payload.Humidity = inRange(move(humidity,0.01),0,1);
     humidityOut = humidity * 100;
