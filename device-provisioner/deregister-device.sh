@@ -10,6 +10,10 @@ thingNamePrefix="MyThing"
 thingNameSuffix=${certificateId:0:16}
 thingName="${thingNamePrefix}-${thingNameSuffix}"
 
+if [[ "$certificateId" -eq "null" ]]; then
+  exit 100
+fi
+
 # remove policy from device certificate
 echo "Detaching the principal/certificate from the device"
 aws iot detach-thing-principal --thing-name $thingName --principal $certificateARN

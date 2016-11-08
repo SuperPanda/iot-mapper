@@ -6,8 +6,10 @@ caKey=$3
 # Commands to generate device certificate
 ## https://aws.amazon.com/blogs/iot/just-in-time-registration-of-device-certificates-on-aws-iot/
 mkdir $1
-openssl genrsa -out $1/deviceCert.key 2048
-openssl req -new -key $1/deviceCert.key -out $1/deviceCert.csr
-openssl x509 -req -in $1/deviceCert.csr -CA $caFile -CAkey $caKey -CAcreateserial -out $1/deviceCert.crt -days 1000 -sha256
-cat $1/deviceCert.crt $caFile > $1/deviceCertBundle.crt
-rm $1/deviceCert.csr
+mkdir $1/keystore
+openssl genrsa -out $1/keystore/deviceCert.key 2048
+openssl req -new -key $1/keystore/deviceCert.key -out $1/keystore/deviceCert.csr
+openssl x509 -req -in $1/keystore/deviceCert.csr -CA $caFile -CAkey $caKey -CAcreateserial -out $1/keystore/deviceCert.crt -days 1000 -sha256
+cat $1/keystore/deviceCert.crt $caFile > $1/keystore/deviceCertBundle.crt
+rm $1/keystore/deviceCert.csr
+rm $1/keystore/deviceCert.crt

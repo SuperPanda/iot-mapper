@@ -1,0 +1,17 @@
+{
+  "name": "mqtt-device",
+  "version": "1.0.0",
+  "description": "A device to send mqtt messages",
+  "main": "index.js",
+  "dependencies": {
+    "mqtt": "^2.0.1"
+  },
+  "devDependencies": {
+    "aws-iot-device-sdk": "^1.0.13"
+  },
+  "scripts": {
+    "test": "node index.js \"/test/1\" test.mqtt"
+  },
+  "author": "Andrew Briscoe",
+  "license": "ISC"
+}
