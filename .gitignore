@@ -7,5 +7,8 @@
 **/*.srl
 **/*.csr
 **/*.crt
-device-simulator/device*/**
+device-simulator/**/**.pem
+device-simulator/**/**.csr
+device-simulator/**/**.crt
+device-simulator/**/**.cert
 app-frontend/index.html

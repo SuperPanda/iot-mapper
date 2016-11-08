@@ -1,3 +1,9 @@
+To create a new device skeleton, run:
+```
+./generate-a-new-device-offline.sh <name of device>
+
+```
+
 The verisign root certificate is root.pem
 To make device certificates... go to the device certificate generator
 ... run the script... ./README.md a_new_folder_name ...
