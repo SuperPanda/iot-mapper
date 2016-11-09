@@ -8,5 +8,4 @@
 **/*.csr
 **/*.crt
 **/*.secret
-device-simulator/device*/**
-app-frontend/index.html
+iot-map-frontend/index.html

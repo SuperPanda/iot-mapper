@@ -1,7 +1,20 @@
-# Commands to generate device certificate
-## https://aws.amazon.com/blogs/iot/just-in-time-registration-of-device-certificates-on-aws-iot/
-mkdir $1
-openssl genrsa -out $1/deviceCert.key 2048
-openssl req -new -key $1/deviceCert.key -out $1/deviceCert.csr
-openssl x509 -req -in $1/deviceCert.csr -CA ../CA-generation/rootCA.pem -CAkey ../CA-generation/rootCA.key -CAcreateserial -out $1/deviceCert.crt -days 1000 -sha256
-cat $1/deviceCert.crt ../CA-generation/rootCA.pem > $1/deviceCertAndCACert.crt
+## Generate a device certificates
+### Using script
+```
+./generate-device-certificate <device name> <CA certificate> <CA key>
+```
+### Manually
+### 1. Generate private key
+```
+openssl genrsa -out deviceCert.key 2048
+```
+### 2. Create a certificate signed by the root/intermediate CA certificate
+```
+# Generate Certificate Signing Request
+openssl genrsa -out deviceCert.key -out device.csr
+# Sign Certificate
+openssl x509 -req -in deviceCert.csr -CA <CA certificate> -CAkey <CA key> -out deviceCert.crt -days 1000 -sha256
+# Bundle device certificate with its root certificate
+cat deviceCert.crt <CA certificate> > deviceCertBundled.crt
+```
+
