@@ -1,0 +1,22 @@
+{
+  "name": "jsbn",
+  "version": "1.3.0",
+  "main": [
+    "./jsbn.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stevedomin/jsbn.git"
+  },
+  "homepage": "https://github.com/stevedomin/jsbn",
+  "_release": "1.3.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.3.0",
+    "commit": "0fbbd3db897e01d82a498adffeadb0bf77359820"
+  },
+  "_source": "https://github.com/stevedomin/jsbn.git",
+  "_target": "^1.3.0",
+  "_originalSource": "jsbn",
+  "_direct": true
+}

@@ -1,0 +1,11 @@
+{
+  "name": "jsbn",
+  "version": "1.3.0",
+  "main": [
+    "./jsbn.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stevedomin/jsbn.git"
+  }
+}
