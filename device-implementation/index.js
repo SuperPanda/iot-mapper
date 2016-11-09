@@ -41,7 +41,7 @@ const awsIot = require('aws-iot-device-sdk');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
 
-enableUI = true;
+enableUI = (process.argv.indexOf("gui") > -1 ? true : false );
 isConnected = false;
 
 
@@ -63,17 +63,22 @@ device = awsIot.device({
 });
 
 // TODO add last will message
+//
+//
+//
 
-message = JSON.parse(fs.readFileSync("./test.mqtt").toString());
-//console.log("message\n---------");
-//console.log(message);
+var log = console.log;
+
+// Important initial state
+var init_message = JSON.parse(fs.readFileSync("./test.mqtt").toString());
+log("imported message\n---------");
+log(init_message);
 
 // TOPICS
 publish_topic = "topic_2";
 request_identity_topic = "whoami";
 
 requestThingName = () => { device.publish(request_identity_topic); }
-a
 
 device.on('connect', function(){
   //console.log('Connected');
@@ -94,40 +99,37 @@ device.on('error', function() {
 });
 
 
-program = blessed();
-program.alternateBuffer();
-program.enableMouse();
-program.hideCursor();
-program.bg('black');
+if (enableUI){
+  program = blessed();
+  program.alternateBuffer();
+  program.enableMouse();
+  program.hideCursor();
+  program.bg('black');
 
 
-screen = blessed.screen({
-  smartCSR: true
-});
-screen.title = 'Demo IoT Device';
+  screen = blessed.screen({
+    smartCSR: true
+  });
+  screen.title = 'Demo IoT Device';
 
-grid = new contrib.grid({rows: 12, cols: 12, screen: screen});
+  grid = new contrib.grid({rows: 12, cols: 12, screen: screen});
 
-// y x w? h?
-latitudeBox = grid.set(0,9,1,3, blessed.box,{label:'Latitude', color:'magenta',top:'50%',left:'50%',height:'50%',width:'50%'});
-longitudeBox = grid.set(1,9,1,3,blessed.box,{label:'Longitude',color:'magenta',style:{valign:'middle',align:'center'}});
+  // y x w? h?
+  latitudeBox = grid.set(0,9,1,3, blessed.box,{label:'Latitude', color:'magenta',top:'50%',left:'50%',height:'50%',width:'50%'});
+  longitudeBox = grid.set(1,9,1,3,blessed.box,{label:'Longitude',color:'magenta',style:{valign:'middle',align:'center'}});
 
-temperatureBox = grid.set(2,9,1,3,blessed.box,{label:message._Metadata.Temperature.Label});
-humidityBox = grid.set(3,9,3,3,contrib.donut,{label:message._Metadata.Humidity.Label});
-statusBox = grid.set(6,9,1,3,blessed.box,{label:message._Metadata.Status.Label});
+  temperatureBox = grid.set(2,9,1,3,blessed.box,{label:init_message._Metadata.Temperature.Label});
+  humidityBox = grid.set(3,9,3,3,contrib.donut,{label:init_message._Metadata.Humidity.Label});
+  statusBox = grid.set(6,9,1,3,blessed.box,{label:init_message._Metadata.Status.Label});
 
-mapBox = grid.set(0,0,12,9,contrib.map,{label:'World Map'})
-logBox = grid.set(7,9,4,3,blessed.log,{label:'Log'})
-connectionBox = grid.set(11,9,1,3,blessed.box,{label:'Connection Status'});
-
-screen.key(['escape', 'q', 'C-c'], function(ch, key) {
-   return process.exit(0);
-});
-
-centerStart = "";
-centerEnd = "";
-
-
+  mapBox = grid.set(0,0,12,9,contrib.map,{label:'World Map'})
+  logBox = grid.set(7,9,4,3,blessed.log,{label:'Log'})
+  connectionBox = grid.set(11,9,1,3,blessed.box,{label:'Connection Status'});
+  log = (msg) => {logBox.log(msg);};
+  screen.key(['escape', 'q', 'C-c'], function(ch, key) {
+     return process.exit(0);
+  });
+}
 
 /*
  * 
@@ -151,6 +153,8 @@ centerEnd = "";
 // then you can do things like moving average
 // You could also add id's and map to other data
 // Seems like a versatile data structure
+//
+// The program supports UI in terminal, or console only and soon browsers
 //
 // TODO: Convert to Prototypes to allow any time of class
 //
@@ -261,46 +265,60 @@ History.get = (options) => {
 // Creating the appropriate prototyes,
 // this could easily end up as a library for interacting with these devices
 
-// Make sure a value remains within defined bounds
-inRange = (x,lo,hi) => Math.min(Math.max(x,lo),hi);
-// Adjust value (v) randomly such that v-i < v < v+i
-move = (x,dx) => x + (Math.random()*2*dx)-dx;
-
-getTemperature = () => { message.Payload.Temperature }
-getHumidity = () => { message.Payload.Humidity }
-getStatus = () => { message.Payload.Status }
-
-// These sensors don't have delta functions
-getTemperature = (t) => { message.Payload.Temperature = inRange(t,-25,65) }
-getHumidity = (h) => { message.Payload.Humidity = inRange(h,0,1)};
-getStatus = (s) => { message.Payload.Status }
-// TODO: Need to write validation
-// Check that the input matches one of the enums for the status field
-// under _Metadata in the state file
-updateStatus = (s) => { message.Payload.Status = s }
-
-//getSpeed = () => { message.Payload.Speed }
-//increaseSpeed 
-
-// Accessors and Modifiers for the device Coordinates
-getLng = () => { message.Coordinates.Lng }
-getLat = () => { message.Coordinates.Lat }
-
-setLng = (x) => {message.Coordinates.Lng=inRange(x,-180,180)}
-setLat = (y) => {message.Coordinates.Lat=inRange(y,-85,85)}
-
-// Make a change in delta (correct measuring inaccuracies remotely, hey?)
-setDeltaLng = (dx) => {setLng(getLng()+dx);}
-setDeltaLat => (dy) => {setLat(getLat()+dy);}
-
-setCoordinates => (x,y) => {setLng(x); setLat(y);}
 
 // Maths <3
 
-pow = Math.pow
-sqrt = Math.sqrt
-e = (n) => { pow(10,n); }
-magnitude = (dx,dy) => {sqrt(pow(dx,2)+pow(dy,2))}
+var pow = Math.pow;
+var sqrt = Math.sqrt;
+var e = function(n){ return pow(10,n); }
+var magnitude = function(dx,dy){
+  return sqrt(pow(dx,2)+pow(dy,2));
+}
+
+
+// Make sure a value remains within defined bounds
+var inRange = (x,lo,hi) => Math.min(Math.max(x,lo),hi);
+// Adjust value (v) randomly such that v-i < v < v+i
+var move = (x,dx) => x + (Math.random()*2*dx)-dx;
+
+
+/**
+ * This function encapsulates all the data associated with the state of the device,
+ * the place where the IoT shadow is cast from...
+ */
+function DeviceData(message){
+  this._message = message;
+  this.getTemperature = function(){ return this._message.Payload.Temperature; }
+  this.getHumidity = function() {return this._message.Payload.Humidity }
+  this.getStatus = function() {return this._message.Payload.Status }
+  
+  // These sensors don't have delta functions
+  this.setTemperature = function(t){this._message.Payload.Temperature = inRange(t,-25,65); }
+  this.setHumidity =function (h) {this._message.Payload.Humidity = inRange(h,0,1)};
+  // TODO: Need to write validation
+  // Check that the input matches one of the enums for the status field
+  // under _Metadata in the state file
+  this._updateStatus = function(s){this._message.Payload.Status = s }
+
+  //getSpeed = () => { message.Payload.Speed }
+  //increaseSpeed 
+
+  // Accessors and Modifiers for the device Coordinates
+  this.getLng = function() { return this._message.Coordinates.Lng; }
+  this.getLat = function() {return this._message.Coordinates.Lat; }
+
+  this.setLng = function(x) {this._message.Coordinates.Lng=inRange(x,-180,180); }
+  this.setLat = function(y) {this._message.Coordinates.Lat=inRange(y,-85,85);}
+
+  // Make a change in delta (correct measuring inaccuracies remotely, hey?)
+  this.setDeltaLng = function(dx) {this.setLng(this.getLng()+dx);}
+  this.setDeltaLat = function(dy) {this.setLat(this.getLat()+dy);}
+
+  this.setCoordinates = function(x,y){this.setLng(x); this.setLat(y);}
+
+}
+
+var deviceData = new DeviceData(init_message);
 
 /**
  * These are the routines used to sense
@@ -312,15 +330,15 @@ magnitude = (dx,dy) => {sqrt(pow(dx,2)+pow(dy,2))}
 // This chooses a direction randomly
 // and tries to make the device move ~1% across the circumference of the earth each second
 movementRoutine = () => {
-  
   // Old values
-  x0 = getLng(); 
-  y0 = getLat();
+  x0 = deviceData.getLng(); 
+  y0 = deviceData.getLat();
+  //logBox.log(message.Coordinates);
 
   // Add old location marker
   // This will be refactored out when the history
   // data structure is ready
-  mapBox.addMarker({"lon":""+y,"lat":""+x,"color":"yellow"});
+  if (enableUI) {mapBox.addMarker({"lon":""+y0,"lat":""+x0,"color":"black"}); }
 
   // TO IMPLEMENT:
   // Turning. If it receives instructions to turn a certain amount,
@@ -329,17 +347,17 @@ movementRoutine = () => {
 
   // Randomly move from current position
   // Used to pick a direction
-  x1 = move(x,5);
-  y1 = move(y,5);
+  x1 = move(x0,5);
+  y1 = move(y0,5);
   
   // Create a movement vector
   dx = x1-x0;
   dy = y1-y0;
    
   // Normalized directions
+  m = magnitude(dx,dy);
   nx = dx/magnitude(dx,dy)
   ny = dy/magnitude(dx,dy)
-
   // Make this controllable later  
  
   // http://boulter.com/gps/distance/?from=1.0000+1.0000&to=1.0000+2.0000&units=k
@@ -348,40 +366,39 @@ movementRoutine = () => {
   // a delta of 1 in longitude coordinates is approximately 110km
   // These are approximate and vary slightly depending on location on earth
  
+  // ?? what ??
   // lets make the nodes move every second
   // so we need the magnitude of the above comments
   //
   duration=1 // the time you want to cover the distance in
-  magnitude_of_gps_delta = magnitude(111*e(3),110*e(3)); // the distance you want to cover
+  //magnitude_of_gps_delta = magnitude(111*e(3),110*e(3)); // the distance you want to cover
 
   // the number of meters that need to be travelled to match magnitude of gps delta is divided by s
-  speed = magnitude_of_gps_delta / duration // m/s
-
+  // speed = magnitude_of_gps_delta / duration // m/s
+  speed = 3
   // Normalize
   
-  setDeltaLng(nx*speed);
-  setDeltaLat(ny*speed);
+  deviceData.setDeltaLng(nx*speed);
+  deviceData.setDeltaLat(ny*speed);
   
 };
 
 sensorRoutine = () => { 
-
-    temperature = getTemperature();
-    humidity = getHumidity();
+    
+    temperature = deviceData.getTemperature();
+    humidity = deviceData.getHumidity();
 
     // Updates map marker on this device
-    setTemperature(move(temperature,0.3));
-    setHumidity(move(humidity,0.01));
+    deviceData.setTemperature(move(temperature,0.3));
+    deviceData.setHumidity(move(humidity,0.01));
 
-    tempMetadata = message._Metadata.Temperature;
-    humidityMetadata = message._Metadata.Humidity;
+    // These needed to be invoke by event notifications from the set handlers
+    tempMetadata = deviceData._message._Metadata.Temperature;
+    humidityMetadata = deviceData._message._Metadata.Humidity;
     tempMetadata.Timestamp = tempMetadata.Timestamp + 1;
     humidityMetadata.Timestamp = humidityMetadata.Timestamp + 1;
 
 }
-humidityBox.setData([
-      {percent: humidityOut, label:'Humidity'
-    }]);
 
 // Update UI Routine
 updateUI = () => {
@@ -389,33 +406,30 @@ updateUI = () => {
   nDecimals = 2;
   gpsDecimals = 6;
 
-  x = getLng()
-  y = getLat()
-
+  x = deviceData.getLng() || 0;
+  y = deviceData.getLat() || 0;
   // Update UI
-  latitudeBox.setContent(x.toFixed(gpsDecimals));
-  longitudeBox.setContent(y.toFixed(gpsDecimals));
+  latitudeBox.setContent(parseFloat(x).toFixed(gpsDecimals));
+  longitudeBox.setContent(parseFloat(y).toFixed(gpsDecimals));
 
   humidityBox.setData([
-      {percent: getHumidity()*100, label:'Humidity'
+      {percent: deviceData.getHumidity()*100, label:'Humidity'
   }]);
 
-  temperatureBox.setContent(getTemperature().toFixed(nDecimals));
-  statusBox.setContent(getStatus());
+  temperatureBox.setContent((deviceData.getTemperature()||0).toFixed(nDecimals));
+  statusBox.setContent(deviceData.getStatus());
   connectionBox.setContent((isConnected ? "Connected" : "Not Connected"));
   
   // Add new location marker
   mapBox.addMarker({"lon":""+y,"lat":""+x});
   screen.render();
   mapBox.clearMarkers();
-
 }
 
 // MAIN LOOP
 timeout = setInterval(function(){
 
-  mode = message.Payload.Status;
-
+  mode = deviceData.getStatus();
   // Only run if set to roam
   if (mode == "ROAM_ONLY" || mode == "ROAM_AND_SENSE"){
     movementRoutine();
@@ -426,11 +440,17 @@ timeout = setInterval(function(){
   if (mode == "SENSE_ONLY" || mode == "ROAM_AND_SENSE"){
     sensorRoutine();
   }
+
+  if (enableUI){
+    updateUI();
+  }
   
 },1000);
 
+
+// Send status to AWS loop
 timeout = setInterval(function(){
-    
-  device.publish(publish_topic,JSON.stringify(message.Coordinates));
+  log("Sent Msg");
+  device.publish(publish_topic,JSON.stringify(deviceData._message.Coordinates));
 
 }, 10000*Math.random());
