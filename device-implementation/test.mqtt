@@ -31,6 +31,7 @@
       "Status": [
         "ROAM_ONLY", "SENSE_ONLY", "ROAM_AND_SENSE", "IDLE"
       ]
-    }
+    },
+    "_Schema": "WeatherDronev0.1"
   }
 }
