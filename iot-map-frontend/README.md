@@ -1,4 +1,16 @@
 # IoT Tracking Map
+## Design
+Built using Web Sockets to the Amazon Web Services IoT platform using AngularJS.
+The reason to use AngularJS is the powerful ability to not have to re-write or move the document object model when getting new data;
+and the ability to seperate presentation from the underlying models, whilst providing bindings (decoupling).
+Also it the built in requirement of dependency injections make this platform easy to integrate into test suites.
+
+The power of using AngularJS is that when data arrives, we can just update the models (e.g. person[1].location changes),
+and it is reflected in real time without having to make any calls to the presentation layer.
+
+This is in effect following similar system design as the implementation of the device, thereby simplifying development efforts,
+due to the intristinc comparability in design.
+
 ## Setup
 ### Get GoogleMaps API key (use until changed)
 ### Secret files
