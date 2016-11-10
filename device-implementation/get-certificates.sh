@@ -11,4 +11,4 @@ trustedCA="../device-provisioner/root.cert"
 
 # since generateDeviceCertificate creates a directory ./<deviceName>
 rm -R $deviceName/keystore
-$generateDeviceCertificate device-simulator $caCert $caKey && mkdir $deviceName/keystore && cp $trustedCA $deviceName/keystore/ && mv $deviceName/* ./ && rmdir $deviceName
+$generateDeviceCertificate device-implementation $caCert $caKey && mkdir $deviceName/keystore && cp $trustedCA $deviceName/keystore/ && mv $deviceName/* ./ && rmdir $deviceName

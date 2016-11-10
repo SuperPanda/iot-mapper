@@ -40,8 +40,10 @@ const fs = require('fs');
 const awsIot = require('aws-iot-device-sdk');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
-
+var moment = require('moment');
 enableUI = (process.argv.indexOf("gui") > -1 ? true : false );
+verbose = (process.argv.indexOf("debug") > -1 ? true : false );
+
 isConnected = false;
 
 
@@ -67,8 +69,19 @@ device = awsIot.device({
 //
 //
 
-var log = console.log;
+var error = (msg) => {
+  log("Encountered an error: " + msg);
+  deviceData.setMode("IDLE");;
+  // This needs a accessor
+ //  deviceData._message_Metadata._Enum
+}
 
+var log = console.log;
+var debug = (msg) => {
+  if (verbose){
+    log(msg);
+  }
+};
 // Important initial state
 var init_message = JSON.parse(fs.readFileSync("./test.mqtt").toString());
 log("imported message\n---------");
@@ -81,7 +94,7 @@ request_identity_topic = "whoami";
 requestThingName = () => { device.publish(request_identity_topic); }
 
 device.on('connect', function(){
-  //console.log('Connected');
+  log('Connected');
   isConnected = true;
   device.subscribe('topic_1');
   requestThingName();
@@ -97,6 +110,16 @@ device.on('message', function(topic, payload) {
 device.on('error', function() {
   isConnected = false;
 });
+
+/***************************************/
+/*                                     */
+/*  The User Interface works on        */
+/*  embedded devices, you just have to */
+/*  connect a display device,          */
+/*  or connect via SSL or putty        */
+/*  and it will decorate the terminal  */
+/*                                     */
+/* *************************************/
 
 
 if (enableUI){
@@ -131,6 +154,17 @@ if (enableUI){
   });
 }
 
+
+/***************************************/
+/*                                     */
+/*   Proposed ADT that can be used on  */
+/*  embedded devices so that if the    */
+/*  device triggers a cloud service    */
+/* it can send back recent recording   */
+/*                                     */
+/* *************************************/
+
+
 /*
  * 
  * A data structure so that historical data points can be plotted or
@@ -158,107 +192,211 @@ if (enableUI){
 //
 // TODO: Convert to Prototypes to allow any time of class
 //
-//
 // TODO: use the following guide to create prototypes for this function and all the helper scripts
 // http://yehudakatz.com/2011/08/12/understanding-prototypes-in-javascript/
 // TODO: implement a custom iterator correctly
 // http://stackoverflow.com/questions/19256297/adding-a-custom-iterator-to-a-javascript-class
 
-History = {}
-
-History._elements = []
-History._idx = 0;
-History._size = 0;
-History._max_size = 4;
-
-History.isEmpty = () => {
-  return History._size == 0;
-}
-
-History.size = () => { History._size };
-
-// Instantiates the function
-// Options:
-//    max_size - size of the log + 
-History.init = (max_size,element_prototype) => {
-  History._max_size = max_size;
-  for (i = 0; i < max_size; i++){
-    History._elements.push(_element_prototype);
+// Used to keep track up the last N records, with the ability to extract X number of elements from any index, provided it does
+// not go out of range.
+// Add a record, and if the buffer is full, the newest object will overwrite the oldest element
+function SlidingEventStoreBuffer(bufferSize){
+  
+  /**
+   *
+   * CyclicConstantSpaceWindowSlidingLimitedHistoricData ADT
+   * 
+   * Setup to handle MQTT messages that don't arrive in order, used to program device remotely... 
+   * This ADT is based on the previous index is the prior data point, and the cursor is sitting where it will write next
+   * I know this is not cloud computing, but I miss data structures. Having built this data structure, it can be copied over to lambda.
+   * Could design algorithms using this ADT to manage priority of message,
+   * The cyclic rule needs to replace on the IDX being valid at all times
+   * increase size. 
+   *
+   * Indexes start at zero
+   *
+   * GROW: WIP
+   *
+   * If size > 1: actually event with 1
+   * Set cursor at first element
+   *
+   * Whilst cursor != idx
+   * [3] [4] [1] [2] 
+   *  x       *   
+   *  |----------------
+   *                  |
+   * ___ [4] [1] [2] [3] ___  ___  ___
+   *      x   *
+   *      |----------------
+   *                      |
+   * __  __  [1] [2] [3] [4] ___  ___  idx: currIdx (2) + size (4) = 6
+   *                          *       Now test the functions all work add, iterate 
+   *
+   *  Increase time expected O(n/2), worst(n), best(c)
+   *
+   * SHRINK: WIP
+   * best strategy would be to add to the list in reverse and move the point to the start.. just replace everything by
+   * running through once
+   * [4] [5] [6] [7] ___  [1] [2] [3] ==> using iterable [ 1, 2, 3, 4, 5, 6, 7 ]
+   *                  *   
+   *  once got array
+   *  _idx <- 0, _size <- 0, _max_size = 3
+   *
+   *  1    2    3
+   *  4    5    6
+   *  7    *
+   * ___  ___  ___                  
+   *  7    5    6
+   *       *
+   *
+   *
+   * DELETE (idx)
+   * - delete at idx=4
+   * - how to get position number... if D_idx > curr_idx; then position = (max_size + curr_idx) - D_idx;
+   *
+   *                  D
+   * [7] [8] [3] [4] [5] [6] 
+   *          *           
+   *                               (curr_idx = 2)
+   *                  D     |
+   * [7] [8] [3] [4] [5] [6]|[7] [8] [3] (position_idx in sequence 6+2-5=3)
+   *                  ^     |     ^
+   *                  3   2   1   0    
+   * 
+   *                                                 (for all older elements, shift to be closer
+   *
+   *  D
+   * [7] [8] [3] [4] [5] [6]
+   *          *
+   *       
+   *          D
+   * [7] [8] [3] [4] [5] [6] - easy, just reduce by 1 and go backwards
+   *          *
+   *       
+   */
+  this._max_size = bufferSize;
+  debug("Instantiating a new Location Buffer");
+  this._elements = [];
+  for (i = 0; i < bufferSize; i++){
+    this._elements.push({"x":0,"y":0});
   }
-}
+  this._idx = 0;
+  this._size = 0;
+  this._max_size = bufferSize;
 
-History.add = (x,y) => {
-  History._elements[History._idx] = {_x:x,_y:y};
-  History._size = Math.min(History._size+1,History._max_size);
-  History._idx = (History.idx+1)%History._max_size;
-}
+  this.isEmpty = function(){ return this._size == 0; };
+  this.size = function(){ return this._size; };
 
-
-History.it = {}
-History.it[Symbol.iterator] = function*(){
-  items = []
-  remaining = 0  
-  for (i = History.size-1; i >= 0; i--){ 
-     items.push(History.elements[(History._idx+i)%History._max_size])
-     remaining = remaining + 1
-   }
-   //Now all the elements are from youngest to oldest
-   while (remaining > 0){
-      yield items.pop()
-   }
-}
-
-// returns oldest to newest
-// Accepts the following options:
-//    windowSize: the number of elements to return (default all)
-//    shift: the number of values to skip
-// Expects (TODO: BUILD TESTS):
-//    - windowSize:
-//        [0] [1] [2] [3]
-//        windowSize + shift < History size + 1
-//        shift >= 0
-// This would be good to write test cases for
-History.get = (options) => {  
-  items = []
-
-  _options = options || {
-    windowSize: History._size,
-    shift: 0
+  // Here is assumes that ._idx is correct
+  this.add = function(_x,_y){
+    var obj = { "x":_x,"y":_y }
+    //debug("Adding " + obj.toString() + " to history")
+    //debug("Adding " + obj.x + "," + obj.y +" to history")
+    this._elements[this._idx] = obj;
+    this._size = Math.min(this._size+1,this._max_size);
+    this._idx = (this._idx+1)%this._max_size;
   };
 
-  // Defensive Programming
-  condition1 = _options.windowSize + _options.shift < History._size + 1;
-  condition2 = _options.shift > 0;
-  if (!condition1 || !condition2){
-    throw InvalidArguments;
-  }
+  /*
+   * What we know that whatever precede the cursor idx, was the last thing to be added
+   * if the idx = 0, and buffer size > 0 (which I don't thing is possible) 
+   *
+   * So it was
+   *
+   * [2] [3] [1]
+   * ___ ___ ___
+   *          *
+   *
+   * ___ ___ [1] [2] [3]
+   *  *       
+   *                    
+   * Start at i=(idx+max_size-1)%max_size === idx previous items.
+   * As long as the there are enough elements
+   * (0+5-1) = 4, idx of [3] -- (1)
+   * (0+5-2) = 3, idx of [2] -- (2)               
+   * (0+5-3) = 2, idx of [1] -- (3), the number of elements
+   *
+   */
 
-  skipCountDown = _options.shift;
-  itemSize = 0;  
+   /** REATTEMPT ITERABLE LATER **/
 
-  for (let element in History.it()){
-    if (skipCountDown != 0){ skipCountDown = skipCountDown - 1; continue; }
-    items.push(element);
-    itemSize = itemSize + 1;
-    if (itemSize == _options.windowSize){ break; }
-  }
-  items.reverse(); // Put oldest data first
-  return items;
-}
+  // returns oldest to newest
+  // Accepts the following options:
+  //    windowSize: the number of elements to return (default all)
+  //    shift: the number of values to skip,
+  //    reversed: false by default
+  // Expects (TODO: BUILD TESTS):
+  //    - windowSize:
+  //        [0] [1] [2] [3]
+  //        windowSize + shift < History size + 1
+  //        shift >= 0
+  // This would be good to write test cases for (test the the reverse works and etc)
+  this.get = function(windowSize,shift=0,reverse=false){  
+    items = []
+    var _nice = 0
+    if (windowSize == null){
+        getSize = (x) => { 
+          x - shift;
+        }
+        windowSize = getSize(this._size);
+     }
 
-//
-// methods
-// fn::init()
-// fn::init(max_size) => sets the 
-// fn::it() => returns an iterable
-// fn::size() => returns number of items recorded
-// fn::add(x,y)
-// for (let pos in History.it()){}
-// fn::get(
+     //getValue = (x) => { x }
+     for (i = this._size; i > 0; i = i - 1){ 
+        //items.push(getValue(this._elements[(this._idx+i-1)%this._max_size]));
+        items.push(this._elements[(this._idx+i-1)%this._max_size]);
+     }
+     // NEWEST--->OLDEST
+     // Converting to oldest to newest...
+     items.reverse();
+    log(shift);
+    log(shift);
+    log(shift);
+    log(windowSize);
+    log(windowSize);
+    log(windowSize);
+    log(windowSize);
+     return items.splice(shift,windowSize+shift);
+     
+ } 
+}   
+    
+    // BUG: This will fail if you provide partial options,
+    // requires to be added to a test suite, and fixed
+    // with a merge tool
+    // Need tp write 
+    // Defensive Programming
+    //condition1 = (windowSize + shift) =< this.size()
+    //condition2 = (shift <= 0)
+    //if (!condition1 || !condition2){
+    /*  debug(JSON.stringify({"v1":windowSize,"v2":shift,"v3":reverse}))
+      debug("Condition 1: " + condition1)
+     debug("Condition 2: " + condition2)
+      error("Error in get code")
+     // //throw InvalidArguments;
+      return []
+    }*/
+  //
+  // methods
+  // fn::it() => returns an iterable
+  // fn::size() => returns number of items recorded
+  // fn::add(x,y) => adds 2 values
+  // for (let pos in History.it()){}
+  // fn::get(options)  ~ good for running avearges
+  //   "windowSize": number of elements to return
+  //   "shift": how many elements to skip (always the oldest first),
+  //     you can skip the new ones by using a smaller window size
+  //
 
-//
-// Utility functions
-// 
+
+////
+
+var gpsMeasurements=new SlidingEventStoreBuffer(4);
+
+
+// Utility functions - If there is a way to require them, and have them available from the global scope it would be handy.
+// This is code for an embedded device not a web application; give me some freedom with less verbosity, and some good
+// quick selection of commands that do what I need
 
 // This will make integration with lambda functions easier
 // as they almost be copy and pasted.
@@ -285,21 +423,48 @@ var move = (x,dx) => x + (Math.random()*2*dx)-dx;
 /**
  * This function encapsulates all the data associated with the state of the device,
  * the place where the IoT shadow is cast from...
+ *
+ * TODO: Import a linear algebra package
+ *
  */
 function DeviceData(message){
+
+  // These needed to be invoke by event notifications from the set handlers
+  this._updateMetadata = function(valueUpdated){
+    if (!this._message._Metadata[valueUpdated]){
+      debug("Metadata cannot be found for " + updateMetadata);
+      return false;
+    }
+    this._message._Metadata[valueUpdated].timestamp = moment().valueOf();
+  }
+
+  // TODO: Turn each sensor into an object
+  
+  // TODO: GENERATE THE FUNCTIONS BASED ON THE PROVIDED SCHEMA
   this._message = message;
-  this.getTemperature = function(){ return this._message.Payload.Temperature; }
+  this.getTemperature = function(){return this._message.Payload.Temperature; }
   this.getHumidity = function() {return this._message.Payload.Humidity }
   this.getStatus = function() {return this._message.Payload.Status }
   
   // These sensors don't have delta functions
-  this.setTemperature = function(t){this._message.Payload.Temperature = inRange(t,-25,65); }
-  this.setHumidity =function (h) {this._message.Payload.Humidity = inRange(h,0,1)};
+  this.setTemperature = function(t){
+    this._message.Payload.Temperature = inRange(t,-25,65);
+    this._updateMetadata("Temperature");
+  }
+  this.setHumidity =function (h) {
+    this._message.Payload.Humidity = inRange(h,0,1)
+    this._updateMetadata("Humidity");
+  };
+
+
   // TODO: Need to write validation
   // Check that the input matches one of the enums for the status field
   // under _Metadata in the state file
-  this._updateStatus = function(s){this._message.Payload.Status = s }
-
+  this.setMode = function(s){
+    this._message.Payload.Status = s;
+    this._updateMetadata("Status");    
+  }
+  
   //getSpeed = () => { message.Payload.Speed }
   //increaseSpeed 
 
@@ -331,72 +496,50 @@ var deviceData = new DeviceData(init_message);
 // and tries to make the device move ~1% across the circumference of the earth each second
 movementRoutine = () => {
   // Old values
-  x0 = deviceData.getLng(); 
-  y0 = deviceData.getLat();
+  let x0 = deviceData.getLng(); 
+  let y0 = deviceData.getLat();
   //logBox.log(message.Coordinates);
 
   // Add old location marker
   // This will be refactored out when the history
   // data structure is ready
-  if (enableUI) {mapBox.addMarker({"lon":""+y0,"lat":""+x0,"color":"black"}); }
+  //if (enableUI) {mapBox.addMarker({"lon":""+y0,"lat":""+x0,"color":"black"}); }
 
   // TO IMPLEMENT:
   // Turning. If it receives instructions to turn a certain amount,
   // it makes the turn and continues in a straight path. The calculations
-  // to the destination can be done in the cloud.
+  // on how much to turn to reach the destination can be done in the cloud.
 
   // Randomly move from current position
   // Used to pick a direction
-  x1 = move(x0,5);
-  y1 = move(y0,5);
+  let x1 = move(x0,1);
+  let y1 = move(y0,1);
   
   // Create a movement vector
-  dx = x1-x0;
-  dy = y1-y0;
+  let dx = x1-x0;
+  let dy = y1-y0;
    
   // Normalized directions
-  m = magnitude(dx,dy);
-  nx = dx/magnitude(dx,dy)
-  ny = dy/magnitude(dx,dy)
-  // Make this controllable later  
- 
-  // http://boulter.com/gps/distance/?from=1.0000+1.0000&to=1.0000+2.0000&units=k
-  // a delta of 1 in latitude coordinates is approximately 111km
-  // http://boulter.com/gps/distance/?from=1.0000+1.0000&to=2.0000+1.0000&units=k 
-  // a delta of 1 in longitude coordinates is approximately 110km
-  // These are approximate and vary slightly depending on location on earth
- 
-  // ?? what ??
-  // lets make the nodes move every second
-  // so we need the magnitude of the above comments
-  //
-  duration=1 // the time you want to cover the distance in
-  //magnitude_of_gps_delta = magnitude(111*e(3),110*e(3)); // the distance you want to cover
+  let m = magnitude(dx,dy);
+  let nx = dx/magnitude(dx,dy)
+  let ny = dy/magnitude(dx,dy)
 
-  // the number of meters that need to be travelled to match magnitude of gps delta is divided by s
-  // speed = magnitude_of_gps_delta / duration // m/s
-  speed = 3
-  // Normalize
+  let speed = 3
   
   deviceData.setDeltaLng(nx*speed);
   deviceData.setDeltaLat(ny*speed);
-  
-};
+}
 
 sensorRoutine = () => { 
     
     temperature = deviceData.getTemperature();
     humidity = deviceData.getHumidity();
-
+    x = deviceData.getLng();
+    y = deviceData.getLat();
+    gpsMeasurements.add(x,y);
     // Updates map marker on this device
     deviceData.setTemperature(move(temperature,0.3));
     deviceData.setHumidity(move(humidity,0.01));
-
-    // These needed to be invoke by event notifications from the set handlers
-    tempMetadata = deviceData._message._Metadata.Temperature;
-    humidityMetadata = deviceData._message._Metadata.Humidity;
-    tempMetadata.Timestamp = tempMetadata.Timestamp + 1;
-    humidityMetadata.Timestamp = humidityMetadata.Timestamp + 1;
 
 }
 
@@ -419,8 +562,17 @@ updateUI = () => {
   temperatureBox.setContent((deviceData.getTemperature()||0).toFixed(nDecimals));
   statusBox.setContent(deviceData.getStatus());
   connectionBox.setContent((isConnected ? "Connected" : "Not Connected"));
+
+  isEmpty = gpsMeasurements.isEmpty();
+  if (!isEmpty){
+    //debug(gpsMeasurements);
+    positions = gpsMeasurements.get(gpsMeasurements.size(),0,false);
+    debug(positions);
+    //debug("X: " + pos[0]._x + ", Y: "+pos[0]._y);
+  }
   
   // Add new location marker
+
   mapBox.addMarker({"lon":""+y,"lat":""+x});
   screen.render();
   mapBox.clearMarkers();
@@ -428,7 +580,7 @@ updateUI = () => {
 
 // MAIN LOOP
 timeout = setInterval(function(){
-
+  
   mode = deviceData.getStatus();
   // Only run if set to roam
   if (mode == "ROAM_ONLY" || mode == "ROAM_AND_SENSE"){
@@ -448,9 +600,14 @@ timeout = setInterval(function(){
 },1000);
 
 
+// Depends to device data
+//function Scheduler(){
+//
+//}
+
 // Send status to AWS loop
 timeout = setInterval(function(){
-  log("Sent Msg");
+  debug("Sent Msg");
   device.publish(publish_topic,JSON.stringify(deviceData._message.Coordinates));
 
 }, 10000*Math.random());
