@@ -1,0 +1,14 @@
+- Create S3 bucket
+- Add Parameter for S3 bucket when stack is created
+-- Store webpage
+-- Store lambda functions
+- Output Webpage
+
+Step 1. See if the iot catalog updates
+Step 2. Create things
+Step 3. Write a function to remove certificate and devices
+- remove certificate
+-- detach policy
+-- detach thing
+-- deactive certifate
+-- remove certificate

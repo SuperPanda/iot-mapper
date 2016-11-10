@@ -1,0 +1,10 @@
+add role www
+
+add IoT rules:
+- role: www, rule: rebroadcast /devices/send/broadcast to /www/receive/broadcast
+- role: IoTThing, rule: rebroadcast /devices/send/broadcast to /devices/receive/broadcast
+- create v3 of a policy -- figure out how to do versioning
+-- also figure out if I can store the policy outside of the cloud formation template
+
+-- setup a device that i can control system by making a free online call to a service...
+--- voice controlled triggered build would be cool

@@ -1,0 +1,42 @@
+
+<h2>Signin to iot.pandasportal.net</h2>
+<div google-signin 
+  client-id='CLIENT_ID' 
+  after-signin="signedIn(oauth)"></div>
+<pre></pre>
+
+
+
+
+
+  <div id="AppContainer" ng-controller="TestCtrl" style="vertical-align:top"> 
+    <div id="dashboard" style="height:100vh;width:70%;display:inline-block;vertical-align:top">
+     <ng-map zoom="5" center="[{{position.lat}},{{position.lng}}]">
+        <span ng-repeat="d in deviceAttrs">
+          <marker position="[{{d.lat}},{{d.lng}}]"></marker>
+        </span>
+      </ng-map>
+    </div>
+    <div id="sidebar" style="padding:0.5%;overflow:auto;height:98vh;width:28%;display:inline-block;"> 
+ <h1>Selected device: {{ node }}</h1>
+<fieldset>
+	<legend>Coordinates</legend>
+	Latitude: {{ message.Coordinates.Lng }}<br />
+	Longitude: {{ message.Coordinates.Lat }}
+  </fieldset>
+      <p>Center: ( {{ position.lat }}, {{ position.lng }} ) radius: {{ viewRadius }}</p>
+
+      <p ng-model="lastMQTT">----</p>
+      <p ng-repeat="d in deviceAttrs">Id: {{ d.deviceId }} Lat: {{ d.lat }} Lng: {{ d.lng }} </p>
+
+      <p>Subscribe to updates of active nodes of the current view port. /things/THING1253/attribute-update/accepted. This should trigger AngularJS to do 
+         a RESTful call to get a dump of all the recebt measurements. </p>
+      <p>Subscribe to movement updates /things/partitionN/location-update (use overlapping partitions if need be, a view port subscribes to the cloest partition center)</p>
+      <p>For now just use all /things/location-update</p>
+      <p>Payload:</p>
+      <ul>
+        <li>deviceId</li>
+        <li>lat</li>
+        <li>lng</li>
+      </ul>
+  </div>
