@@ -1,33 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="refresh" content="10">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-	<link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <script src="bower_components/amazon-cognito-identity-js/dist/aws-cognito-sdk.js"></script>
-    <script src="bower_components/amazon-cognito-identity-js/dist/aws-cognito-identity.min.js"></script>
-    <script src="bower_components/jsbn/jsbn.js"></script>
-    <script src="bower_components/jsbn/jsbn2.js"></script>
-    <script src="bower_components/moment/moment.js"></script>
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/ngmap/build/scripts/ng-map.min.js"></script>
+	<link rel="icon" href="http://iot.pandasportal.net/favicon.ico" type="image/x-icon" />
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0-rc.3/angular.min.js"></script>
+    <script src="http://code.angularjs.org/1.2.0-rc.3/angular-route.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.0.0-rc1.min.js"></script>
+    <script src="vendor/ngmap/ng-map.min.js"></script>
+	<script src="vendor/angular-websocket/angular-websocket.min.js"></script>
     <script src="http://maps.google.com/maps/api/js?key=<INSERT_GOOGLE_MAPS_API_KEY>"></script>
-	<script src="js/app.js"></script>
-	<script>
-    AWSCognito.config.region = 'us-east-1';
-	  var poolData = {
-  		UserPoolId : '<INSERT_USER_POOL_ID>',
-  		ClientId : '<INSERT_CLIENT_ID>',
-  		Paranoia : 7
-  	};
-
-  	var userPool = AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
-	var userData = {
-		Username : 'user',
-    Pool : userPool
-	};
-	var cognitoUser = AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-    </script>
+	<script src="scripts/app.js"></script>
 <style>
 body {
  overflow:hidden;
@@ -37,38 +19,16 @@ ng-map {
 }
 </style>
 </head>
-<body ng-app="iot-tracker-app">
-  <div id="AppContainer" ng-controller="TestCtrl" style="vertical-align:top"> 
-    <div id="dashboard" style="height:100vh;width:70%;display:inline-block;vertical-align:top">
-     <ng-map zoom="5" center="[{{position.lat}},{{position.lng}}]">
-        <span ng-repeat="d in deviceAttrs">
-          <marker position="[{{d.lat}},{{d.lng}}]"></marker>
-        </span>
-      </ng-map>
-    </div>
-    <div id="sidebar" style="padding:0.5%;overflow:auto;height:98vh;width:28%;display:inline-block;"> 
- <h1>Selected device: {{ node }}</h1>
-<fieldset>
-	<legend>Coordinates</legend>
-	Latitude: {{ message.Coordinates.Lng }}<br />
-	Longitude: {{ message.Coordinates.Lat }}
-  </fieldset>
-      <p>Center: ( {{ position.lat }}, {{ position.lng }} ) radius: {{ viewRadius }}</p>
-
-      <p ng-model="lastMQTT">----</p>
-      <p ng-repeat="d in deviceAttrs">Id: {{ d.deviceId }} Lat: {{ d.lat }} Lng: {{ d.lng }} </p>
-
-      <p>Subscribe to updates of active nodes of the current view port. /things/THING1253/attribute-update/accepted. This should trigger AngularJS to do 
-         a RESTful call to get a dump of all the recebt measurements. </p>
-      <p>Subscribe to movement updates /things/partitionN/location-update (use overlapping partitions if need be, a view port subscribes to the cloest partition center)</p>
-      <p>For now just use all /things/location-update</p>
-      <p>Payload:</p>
-      <ul>
-        <li>deviceId</li>
-        <li>lat</li>
-        <li>lng</li>
-      </ul>
-  </div>
-</div>
+<body>
+	<div ng-view></div>
+	<script src="scripts/services.js"></script>	
+	<script src="scripts/directives.js"></script>	
+	<script type="text/javascript">
+	  (function() {
+	   var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+	   po.src = 'https://apis.google.com/js/client:plusone.js?onload=onLoadCallback';
+	   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+	 })();
+	</script>
 </body>
 </html>
