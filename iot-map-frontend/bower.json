@@ -21,7 +21,8 @@
     "aws-sdk": "^2.6.15",
     "amazon-cognito-identity-js": "*",
     "jsbn": "^1.3.0",
-    "moment": "^2.15.2"
+    "moment": "^2.15.2",
+    "angular-websocket": "^2.0.0"
   },
   "devDependencies": {
     "amazon-cognito-identity-js": "*",
