@@ -13,7 +13,8 @@ angular.module('ng-iot.directives', [])
       attrs.$set('class', 'g-signin');
       // Set the clientid
       attrs.$set('data-clientid', 
-          attrs.clientId+'.apps.googleusercontent.com');
+          attrs.clientId);
+	// +'.apps.googleusercontent.com'
       // build scope urls
       var scopes = attrs.scopes || [
         'auth/plus.login', 
