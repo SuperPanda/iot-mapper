@@ -12,6 +12,9 @@ var app = angular.module('ng-iot',['ng-iot.services','ng-iot.directives','ngRout
   .otherwise({
     redirectTo: '/login'
   });
+})
+.config(function(AWSServiceProvider) {
+  AWSServiceProvider.setArn('arn:aws:iam::899859277926:role/google-web-role');
 });
 window.onLoadCallback = function() {
   // When the document is ready

@@ -4,7 +4,7 @@ angular.module('ng-iot.services', [])
     _user: null,
     setCurrentUser: function(u) {
       if (u && !u.error) {
-        service._user = u;
+        AWSService.setToken(u.id_token);
         return service.currentUser();
       } else {
         var d = $q.defer();
@@ -19,4 +19,42 @@ angular.module('ng-iot.services', [])
     }
   };
   return service;
+}).provider('AWSService', function() {
+  var self = this;
+  self.arn = null;
+ 
+  self.setArn = function(arn) {
+    if (arn) self.arn = arn;
+  }
+ 
+  self.$get = function($q) {
+    return {}
+  }
+  
+   self.$get = function($q) {
+    var credentialsDefer = $q.defer(),
+        credentialsPromise = credentialsDefer.promise;
+ 
+    return {
+      credentials: function() {
+        return credentialsPromise;
+      },
+      setToken: function(token, providerId) {
+        var config = {
+          RoleArn: self.arn,
+          WebIdentityToken: token,
+          RoleSessionName: 'web-id'
+        }
+        if (providerId) {
+          config['ProviderId'] = providerId;
+        }
+        self.config = config;
+        AWS.config.credentials =
+          new AWS.WebIdentityCredentials(config);
+        credentialsDefer
+          .resolve(AWS.config.credentials);
+      }
+    }
+  }
+  
 });
