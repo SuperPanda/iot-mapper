@@ -1,0 +1,35 @@
+<div id="AppContainer" style="vertical-align:top"> 
+	<div id="dashboard" style="height:100vh;width:70%;display:inline-block;vertical-align:top">
+		<ng-map zoom="5" center="[{{position.lat}},{{position.lng}}]">
+			<span ng-repeat="d in deviceAttrs">
+				<marker position="[{{d.lat}},{{d.lng}}]"></marker>
+			</span>
+		</ng-map>
+	</div>
+	<div id="sidebar" style="padding:0.5%;overflow:auto;height:98vh;width:28%;display:inline-block;"> 
+		<h1>IoT Tracker Map Controls</h1>
+		<p>When implemented the markers will be selectable, or searchable which will bind the device attributes to this dashboard</p>
+		<p>Map Parameters: ( {{ position.lat }}, {{ position.lng }} ) radius: {{ viewRadius }}</p>		
+		<h2>Selected Node: {{ selectedNodeId }}</h1>
+		<fieldset>
+			<legend>Payload:</legend>
+			<p> The sensor measurements would be displayed here.</p>
+		</fieldset>
+		<fieldset>
+			<legend>Controls:</legend>
+			<p>Controls allow users to send commands</p>
+			<p>The available commands are generated based on meta data provided by the device or its shadow</p>
+			<button ng-click="toggleMove()">Toggle Movement</button>
+		</fieldset>
+		<fieldset>
+			<legend>Coordinates</legend>
+			Latitude:  {{ selectedNode.lat }}<br />
+			Longitude: {{selectedNode.lng }}
+		</fieldset>
+		<p>This is where the last message is displayed from that device</p>
+		<p ng-model="lastMQTT"></p>
+		<p> Map: {{ d.deviceId }} Lat: {{ d.lat }} Lng: {{ d.lng }} </p>
+		<p>The MQTT topic to subscribe to are /www/receive/broadcast</p>
+		<p>Rest API calls we be made when a message is received as it is triggered by a rule in the change of the IoT shadow</p>
+	</div>
+</div>
