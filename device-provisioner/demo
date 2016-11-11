@@ -1,0 +1,10 @@
+rm -rf alice
+rm -rf bob
+rm -rf charlie
+rm -rf dave
+rm -rf eve
+./create alice
+./create bob
+./create charlie
+./create dave
+./create eve

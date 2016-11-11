@@ -1,3 +1,10 @@
+device-instance*/**
+
+**/alice/**
+**/bob/**
+**/charlie/**
+**/dave/**
+**/eve/**
 **/*.swp
 *.DS_Store
 **/node_modules/

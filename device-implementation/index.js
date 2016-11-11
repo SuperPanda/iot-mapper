@@ -24,7 +24,7 @@
  *      - Using the single responsibility princile it is possible to change the code or schema
  *        with minimal changes required
  *   - Some functions were included to facilitate the way IoT in Cloud Computing Frameworks
- *       communicate the intent to change a value (e.g. instead of instruction a node to go
+ *       communicate the intent to change a value (e.g. instead of instruction a ode to go
  *       NE, you send out messages which control the output of an actuator. Thereby, providing
  *       unlimited computing power to the tiny device.
  *   - The MQTT schema we devised includes a way of communicating the different states possible
@@ -46,7 +46,7 @@ verbose = (process.argv.indexOf("debug") > -1 ? true : false );
 
 isConnected = false;
 
-
+CLIENT_ID = fs.readFileSync("./clientID").toString().trim();
 // get endpoint
 endpoint = fs.readFileSync("./endpoint");
 console.log("Using endpoint: " + endpoint);
@@ -88,22 +88,30 @@ log("imported message\n---------");
 log(init_message);
 
 // TOPICS
-publish_topic = "topic_2";
+publish_topic = "devices/send/broadcast";
 request_identity_topic = "whoami";
-
+listen_topic = "devices/receive/broadcast";
 requestThingName = () => { device.publish(request_identity_topic); }
 
 device.on('connect', function(){
   log('Connected');
   isConnected = true;
-  device.subscribe('topic_1');
+  device.subscribe(listen_topic);
   requestThingName();
   //device.publish(publish_topic, JSON.stringify(message));
 });
 
 device.on('message', function(topic, payload) {
-  console.log('hi');
-  console.log('message', topic, payload.toString());
+  //console.log('hi');
+  msg = JSON.parse(payload);
+  debug("recv " + topic + ": " + payload.toString());
+  if (msg.position){
+    log(msg.clientId + " @ " + msg.position.Lng +"," + msg.position.Lat);
+ }
+ if (msg.message){
+    log(msg.clientId + " " + msg.message);
+ }
+  //console.log('message', topic, payload.toString());
   //device.end();
 });
 
@@ -349,13 +357,6 @@ function SlidingEventStoreBuffer(bufferSize){
      // NEWEST--->OLDEST
      // Converting to oldest to newest...
      items.reverse();
-    log(shift);
-    log(shift);
-    log(shift);
-    log(windowSize);
-    log(windowSize);
-    log(windowSize);
-    log(windowSize);
      return items.splice(shift,windowSize+shift);
      
  } 
@@ -387,9 +388,6 @@ function SlidingEventStoreBuffer(bufferSize){
   //   "shift": how many elements to skip (always the oldest first),
   //     you can skip the new ones by using a smaller window size
   //
-
-
-////
 
 var gpsMeasurements=new SlidingEventStoreBuffer(4);
 
@@ -432,10 +430,11 @@ function DeviceData(message){
   // These needed to be invoke by event notifications from the set handlers
   this._updateMetadata = function(valueUpdated){
     if (!this._message._Metadata[valueUpdated]){
-      debug("Metadata cannot be found for " + updateMetadata);
+      debug("Metadata cannot be found for " + valueUpdated);
       return false;
     }
     this._message._Metadata[valueUpdated].timestamp = moment().valueOf();
+    debug("[" + this._message._Metadata[valueUpdated].timestamp + "] " + valueUpdated + " has been updated");
   }
 
   // TODO: Turn each sensor into an object
@@ -564,18 +563,26 @@ updateUI = () => {
   connectionBox.setContent((isConnected ? "Connected" : "Not Connected"));
 
   isEmpty = gpsMeasurements.isEmpty();
+
+  mapBox.clearMarkers();
   if (!isEmpty){
     //debug(gpsMeasurements);
     positions = gpsMeasurements.get(gpsMeasurements.size(),0,false);
     debug(positions);
+
+    positions.forEach(function(pos){
+    //for (pos in positions){
+      //console.log("X: " + x + ", Y: " + y);
+      //console.log("X: " + pos.x + ", Y: " + pos.y);
+      mapBox.addMarker({"lon":pos.x,"lat":pos.y,"color":"red","marker":"X"});
+      //mapBox.addMarker({"lon":""+x,"lat":""+y,"color":"red","marker":"x"});
+    });
+    //debug(JSON.stringify(positions));
     //debug("X: " + pos[0]._x + ", Y: "+pos[0]._y);
   }
   
   // Add new location marker
-
-  mapBox.addMarker({"lon":""+y,"lat":""+x});
   screen.render();
-  mapBox.clearMarkers();
 }
 
 // MAIN LOOP
@@ -608,6 +615,8 @@ timeout = setInterval(function(){
 // Send status to AWS loop
 timeout = setInterval(function(){
   debug("Sent Msg");
-  device.publish(publish_topic,JSON.stringify(deviceData._message.Coordinates));
+  // Use the cyclic structure for message order
+  msg = ["is welcoming","is angry","is confused"];
+  device.publish(publish_topic,JSON.stringify({"clientId":CLIENT_ID,"message":msg[Math.floor((Math.random()*3)+1)],"position":deviceData._message.Coordinates}));
 
 }, 10000*Math.random());

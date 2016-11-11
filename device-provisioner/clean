@@ -1,0 +1,5 @@
+rm -rf alice
+rm -rf bob
+rm -rf charlie
+rm -rf dave
+rm -rf eve
