@@ -1,0 +1,8 @@
+<div ng-show="!user">
+	<h2>Signin to iot.pandasportal.net</h2>
+	<div google-signin 
+	client-id='679783015761-140qrdlv52natr5k0i2isn8mglnedb3v' 
+	after-signin="signedIn(oauth)">
+	</div>
+	<pre>{{ user | json }}</pre>
+</div>
