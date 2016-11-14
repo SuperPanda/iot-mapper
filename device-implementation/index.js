@@ -88,9 +88,10 @@ log("imported message\n---------");
 log(init_message);
 
 // TOPICS
+// add client id for security
 publish_topic = "devices/send/broadcast";
 request_identity_topic = "whoami";
-listen_topic = "devices/receive/broadcast";
+subscribe_topic = "devices/receive/broadcast"
 requestThingName = () => { device.publish(request_identity_topic); }
 
 device.on('connect', function(){
